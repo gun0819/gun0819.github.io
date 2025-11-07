@@ -29,7 +29,7 @@
             padding: 20px;
         }
 
-        /* 로그인 페이지 */
+        /* 로그인/회원가입 페이지 */
         .login-container {
             display: flex;
             justify-content: center;
@@ -79,6 +79,18 @@
             border-color: #667eea;
         }
 
+        .form-group .error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .form-group .success {
+            color: #28a745;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
         .btn {
             width: 100%;
             padding: 12px;
@@ -100,6 +112,11 @@
             transform: translateY(0);
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn-secondary {
             background: #6c757d;
             margin-top: 10px;
@@ -118,6 +135,23 @@
             padding: 8px 16px;
             font-size: 14px;
             display: inline-block;
+        }
+
+        .link-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .link-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .link-text a:hover {
+            text-decoration: underline;
         }
 
         /* 네비게이션 */
@@ -445,6 +479,26 @@
             text-align: center;
             margin: 20px 0;
         }
+
+        /* 알림 메시지 */
+        .alert {
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -454,17 +508,123 @@
         const { createApp } = Vue;
         const { createRouter, createWebHashHistory } = VueRouter;
 
-        // Mock 데이터 저장소
-        const store = {
-            currentUser: null,
-            books: [
+        // LocalStorage 키
+        const STORAGE_KEYS = {
+            USERS: 'reading_platform_users',
+            CURRENT_USER: 'reading_platform_current_user',
+            BOOKS: 'reading_platform_books',
+            REVIEWS: 'reading_platform_reviews',
+            USER_POINTS: 'reading_platform_points'
+        };
+
+        // LocalStorage 유틸리티
+        const storage = {
+            get(key) {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            },
+            set(key, value) {
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            remove(key) {
+                localStorage.removeItem(key);
+            }
+        };
+
+        // 초기 데이터 설정
+        if (!storage.get(STORAGE_KEYS.USERS)) {
+            storage.set(STORAGE_KEYS.USERS, []);
+        }
+
+        if (!storage.get(STORAGE_KEYS.BOOKS)) {
+            storage.set(STORAGE_KEYS.BOOKS, [
                 { id: 1, title: '어린왕자', author: '생텍쥐페리', isbn: '9788932917245', genre: '소설' },
                 { id: 2, title: '해리포터와 마법사의 돌', author: 'J.K. 롤링', isbn: '9788983920775', genre: '판타지' },
                 { id: 3, title: '데미안', author: '헤르만 헤세', isbn: '9788932917382', genre: '소설' },
                 { id: 4, title: '나미야 잡화점의 기적', author: '히가시노 게이고', isbn: '9788935025893', genre: '소설' },
                 { id: 5, title: '1984', author: '조지 오웰', isbn: '9788937460777', genre: 'SF' }
-            ],
-            reviews: [],
+            ]);
+        }
+
+        if (!storage.get(STORAGE_KEYS.REVIEWS)) {
+            storage.set(STORAGE_KEYS.REVIEWS, []);
+        }
+
+        if (!storage.get(STORAGE_KEYS.USER_POINTS)) {
+            storage.set(STORAGE_KEYS.USER_POINTS, {});
+        }
+
+        // Mock 데이터 저장소
+        const store = {
+            currentUser: storage.get(STORAGE_KEYS.CURRENT_USER),
+            
+            getUsers() {
+                return storage.get(STORAGE_KEYS.USERS) || [];
+            },
+            
+            addUser(user) {
+                const users = this.getUsers();
+                users.push(user);
+                storage.set(STORAGE_KEYS.USERS, users);
+            },
+            
+            findUserByEmail(email) {
+                return this.getUsers().find(u => u.email === email);
+            },
+            
+            getBooks() {
+                return storage.get(STORAGE_KEYS.BOOKS) || [];
+            },
+            
+            addBook(book) {
+                const books = this.getBooks();
+                books.push(book);
+                storage.set(STORAGE_KEYS.BOOKS, books);
+            },
+            
+            getReviews() {
+                return storage.get(STORAGE_KEYS.REVIEWS) || [];
+            },
+            
+            addReview(review) {
+                const reviews = this.getReviews();
+                reviews.push(review);
+                storage.set(STORAGE_KEYS.REVIEWS, reviews);
+            },
+            
+            updateReview(reviewId, updates) {
+                const reviews = this.getReviews();
+                const index = reviews.findIndex(r => r.id === reviewId);
+                if (index !== -1) {
+                    reviews[index] = { ...reviews[index], ...updates };
+                    storage.set(STORAGE_KEYS.REVIEWS, reviews);
+                }
+            },
+            
+            getUserPoints(email) {
+                const points = storage.get(STORAGE_KEYS.USER_POINTS) || {};
+                return points[email] || 0;
+            },
+            
+            addUserPoints(email, amount) {
+                const points = storage.get(STORAGE_KEYS.USER_POINTS) || {};
+                points[email] = (points[email] || 0) + amount;
+                storage.set(STORAGE_KEYS.USER_POINTS, points);
+                if (this.currentUser && this.currentUser.email === email) {
+                    this.currentUser.points = points[email];
+                }
+            },
+            
+            setCurrentUser(user) {
+                this.currentUser = user;
+                storage.set(STORAGE_KEYS.CURRENT_USER, user);
+            },
+            
+            clearCurrentUser() {
+                this.currentUser = null;
+                storage.remove(STORAGE_KEYS.CURRENT_USER);
+            },
+            
             quizzes: [
                 {
                     id: 1,
@@ -482,9 +642,105 @@
                         }
                     ]
                 }
-            ],
-            userPoints: {},
-            pendingReviews: []
+            ]
+        };
+
+        // 회원가입 컴포넌트
+        const Signup = {
+            template: `
+                <div class="login-container">
+                    <div class="login-box">
+                        <h1>📚 회원가입</h1>
+                        <div v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+                        <form @submit.prevent="handleSignup">
+                            <div class="form-group">
+                                <label>사용자 유형</label>
+                                <select v-model="userType">
+                                    <option value="user">일반 사용자</option>
+                                    <option value="admin">관리자</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>이름</label>
+                                <input type="text" v-model="name" required placeholder="홍길동">
+                            </div>
+                            <div class="form-group">
+                                <label>이메일</label>
+                                <input type="email" v-model="email" required placeholder="email@example.com" @blur="checkEmailDuplicate">
+                                <p v-if="emailError" class="error">{{ emailError }}</p>
+                            </div>
+                            <div class="form-group">
+                                <label>비밀번호 (8자 이상)</label>
+                                <input type="password" v-model="password" required placeholder="비밀번호" minlength="8">
+                                <p v-if="password && password.length < 8" class="error">비밀번호는 8자 이상이어야 합니다.</p>
+                            </div>
+                            <div class="form-group">
+                                <label>비밀번호 확인</label>
+                                <input type="password" v-model="passwordConfirm" required placeholder="비밀번호 확인">
+                                <p v-if="passwordConfirm && password !== passwordConfirm" class="error">비밀번호가 일치하지 않습니다.</p>
+                                <p v-if="passwordConfirm && password === passwordConfirm" class="success">✓ 비밀번호가 일치합니다.</p>
+                            </div>
+                            <button type="submit" class="btn" :disabled="!canSubmit">회원가입</button>
+                        </form>
+                        <div class="link-text">
+                            이미 계정이 있으신가요? <router-link to="/">로그인</router-link>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    name: '',
+                    email: '',
+                    password: '',
+                    passwordConfirm: '',
+                    userType: 'user',
+                    emailError: '',
+                    errorMessage: ''
+                };
+            },
+            computed: {
+                canSubmit() {
+                    return this.name && 
+                           this.email && 
+                           this.password.length >= 8 && 
+                           this.password === this.passwordConfirm &&
+                           !this.emailError;
+                }
+            },
+            methods: {
+                checkEmailDuplicate() {
+                    if (this.email) {
+                        const existingUser = store.findUserByEmail(this.email);
+                        if (existingUser) {
+                            this.emailError = '이미 등록된 이메일입니다.';
+                        } else {
+                            this.emailError = '';
+                        }
+                    }
+                },
+                handleSignup() {
+                    // 이메일 중복 체크
+                    if (store.findUserByEmail(this.email)) {
+                        this.errorMessage = '이미 등록된 이메일입니다.';
+                        return;
+                    }
+
+                    // 새 사용자 생성
+                    const newUser = {
+                        id: Date.now(),
+                        name: this.name,
+                        email: this.email,
+                        password: this.password, // 실제로는 암호화해야 함
+                        type: this.userType,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    store.addUser(newUser);
+                    alert('회원가입이 완료되었습니다! 로그인해주세요.');
+                    this.$router.push('/');
+                }
+            }
         };
 
         // 로그인 컴포넌트
@@ -493,14 +749,8 @@
                 <div class="login-container">
                     <div class="login-box">
                         <h1>📚 독서 인증 플랫폼</h1>
+                        <div v-if="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
                         <form @submit.prevent="handleLogin">
-                            <div class="form-group">
-                                <label>사용자 유형</label>
-                                <select v-model="userType">
-                                    <option value="user">일반 사용자</option>
-                                    <option value="admin">관리자</option>
-                                </select>
-                            </div>
                             <div class="form-group">
                                 <label>이메일</label>
                                 <input type="email" v-model="email" required placeholder="email@example.com">
@@ -510,10 +760,13 @@
                                 <input type="password" v-model="password" required placeholder="비밀번호를 입력하세요">
                             </div>
                             <button type="submit" class="btn">로그인</button>
-                            <p style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
-                                OAuth2 기반 보안 로그인 시스템
-                            </p>
                         </form>
+                        <div class="link-text">
+                            계정이 없으신가요? <router-link to="/signup">회원가입</router-link>
+                        </div>
+                        <p style="text-align: center; margin-top: 20px; color: #666; font-size: 14px;">
+                            OAuth2 기반 보안 로그인 시스템
+                        </p>
                     </div>
                 </div>
             `,
@@ -521,21 +774,36 @@
                 return {
                     email: '',
                     password: '',
-                    userType: 'user'
+                    errorMessage: ''
                 };
             },
             methods: {
                 handleLogin() {
-                    // Mock 로그인
-                    store.currentUser = {
-                        id: 1,
-                        email: this.email,
-                        type: this.userType,
-                        name: this.userType === 'admin' ? '관리자' : '사용자',
-                        points: store.userPoints[this.email] || 0
+                    // 사용자 찾기
+                    const user = store.findUserByEmail(this.email);
+                    
+                    if (!user) {
+                        this.errorMessage = '등록되지 않은 이메일입니다.';
+                        return;
+                    }
+                    
+                    if (user.password !== this.password) {
+                        this.errorMessage = '비밀번호가 일치하지 않습니다.';
+                        return;
+                    }
+
+                    // 로그인 성공
+                    const loginUser = {
+                        id: user.id,
+                        email: user.email,
+                        name: user.name,
+                        type: user.type,
+                        points: store.getUserPoints(user.email)
                     };
                     
-                    if (this.userType === 'admin') {
+                    store.setCurrentUser(loginUser);
+                    
+                    if (user.type === 'admin') {
                         this.$router.push('/admin');
                     } else {
                         this.$router.push('/dashboard');
@@ -602,13 +870,13 @@
             data() {
                 return {
                     user: store.currentUser,
-                    reviewCount: store.reviews.filter(r => r.userId === store.currentUser.id).length,
+                    reviewCount: store.getReviews().filter(r => r.userId === store.currentUser.id).length,
                     quizCount: 0
                 };
             },
             methods: {
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -685,23 +953,25 @@
                     searchQuery: '',
                     showQRScanner: false,
                     selectedBook: null,
-                    filteredBooks: store.books
+                    filteredBooks: store.getBooks()
                 };
             },
             methods: {
                 searchBooks() {
+                    const books = store.getBooks();
                     if (!this.searchQuery) {
-                        this.filteredBooks = store.books;
+                        this.filteredBooks = books;
                         return;
                     }
-                    this.filteredBooks = store.books.filter(book =>
+                    this.filteredBooks = books.filter(book =>
                         book.title.includes(this.searchQuery) ||
                         book.author.includes(this.searchQuery) ||
                         book.isbn.includes(this.searchQuery)
                     );
                 },
                 simulateQRScan() {
-                    const randomBook = store.books[Math.floor(Math.random() * store.books.length)];
+                    const books = store.getBooks();
+                    const randomBook = books[Math.floor(Math.random() * books.length)];
                     this.selectedBook = randomBook;
                     this.showQRScanner = false;
                 },
@@ -715,7 +985,7 @@
                     this.$router.push(`/quiz/${this.selectedBook.id}`);
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -807,7 +1077,8 @@
                 }
             },
             mounted() {
-                this.book = store.books.find(b => b.id == this.bookId);
+                const books = store.getBooks();
+                this.book = books.find(b => b.id == this.bookId);
             },
             methods: {
                 toggleRecording() {
@@ -819,7 +1090,7 @@
                         this.recordingTime = 0;
                         this.recordingInterval = setInterval(() => {
                             this.recordingTime++;
-                            if (this.recordingTime >= 300) { // 최대 5분
+                            if (this.recordingTime >= 300) {
                                 this.toggleRecording();
                             }
                         }, 1000);
@@ -829,6 +1100,7 @@
                     const review = {
                         id: Date.now(),
                         userId: store.currentUser.id,
+                        userName: store.currentUser.name,
                         bookId: this.bookId,
                         book: this.book,
                         method: this.writeMethod,
@@ -838,15 +1110,13 @@
                         date: new Date().toLocaleDateString()
                     };
                     
-                    store.reviews.push(review);
-                    store.pendingReviews.push(review);
+                    store.addReview(review);
                     
-                    // 포인트 지급 (승인 대기)
                     alert('감상문이 제출되었습니다! 관리자 승인 후 포인트가 지급됩니다.');
                     this.$router.push('/my-reviews');
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -926,7 +1196,8 @@
                 };
             },
             mounted() {
-                this.book = store.books.find(b => b.id == this.bookId);
+                const books = store.getBooks();
+                this.book = books.find(b => b.id == this.bookId);
                 this.quiz = store.quizzes.find(q => q.bookId == this.bookId);
             },
             methods: {
@@ -946,13 +1217,11 @@
                     this.quizCompleted = true;
                     
                     if (this.score >= 80) {
-                        const email = store.currentUser.email;
-                        store.userPoints[email] = (store.userPoints[email] || 0) + 50;
-                        store.currentUser.points = store.userPoints[email];
+                        store.addUserPoints(store.currentUser.email, 50);
                     }
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1013,7 +1282,7 @@
             `,
             computed: {
                 myReviews() {
-                    return store.reviews.filter(r => r.userId === store.currentUser.id);
+                    return store.getReviews().filter(r => r.userId === store.currentUser.id);
                 }
             },
             methods: {
@@ -1026,7 +1295,7 @@
                     return statusMap[status] || status;
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1051,7 +1320,7 @@
                     <div class="container">
                         <div class="dashboard">
                             <h2>포인트 현황 💎</h2>
-                            <div class="point-display">{{ store.currentUser.points }} P</div>
+                            <div class="point-display">{{ currentPoints }} P</div>
                             
                             <h3>보상 신청</h3>
                             <div class="card-grid">
@@ -1060,9 +1329,9 @@
                                     <p>{{ reward.description }}</p>
                                     <p style="font-size: 24px; color: #667eea; font-weight: bold;">{{ reward.points }} P</p>
                                     <button @click="requestReward(reward)" 
-                                            :disabled="store.currentUser.points < reward.points" 
+                                            :disabled="currentPoints < reward.points" 
                                             class="btn btn-sm">
-                                        {{ store.currentUser.points >= reward.points ? '신청하기' : '포인트 부족' }}
+                                        {{ currentPoints >= reward.points ? '신청하기' : '포인트 부족' }}
                                     </button>
                                 </div>
                             </div>
@@ -1072,7 +1341,7 @@
             `,
             data() {
                 return {
-                    store: store,
+                    currentPoints: store.getUserPoints(store.currentUser.email),
                     rewards: [
                         { id: 1, name: '스타벅스 아메리카노', description: '따뜻한 커피 한 잔', points: 100 },
                         { id: 2, name: '교보문고 도서상품권', description: '5,000원 상품권', points: 200 },
@@ -1084,14 +1353,13 @@
             methods: {
                 requestReward(reward) {
                     if (confirm(`${reward.name}을(를) ${reward.points} 포인트로 신청하시겠습니까?`)) {
-                        const email = store.currentUser.email;
-                        store.userPoints[email] -= reward.points;
-                        store.currentUser.points = store.userPoints[email];
+                        store.addUserPoints(store.currentUser.email, -reward.points);
+                        this.currentPoints = store.getUserPoints(store.currentUser.email);
                         alert('보상이 신청되었습니다! 관리자 확인 후 지급됩니다.');
                     }
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1159,15 +1427,15 @@
             `,
             data() {
                 return {
-                    totalUsers: 150,
-                    pendingReviews: store.pendingReviews.filter(r => r.status === 'pending').length,
-                    totalBooks: store.books.length,
-                    totalReviews: store.reviews.length
+                    totalUsers: store.getUsers().length,
+                    pendingReviews: store.getReviews().filter(r => r.status === 'pending').length,
+                    totalBooks: store.getBooks().length,
+                    totalReviews: store.getReviews().length
                 };
             },
             methods: {
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1206,7 +1474,7 @@
                                     </thead>
                                     <tbody>
                                         <tr v-for="review in reviews" :key="review.id">
-                                            <td>사용자{{ review.userId }}</td>
+                                            <td>{{ review.userName || '사용자' + review.userId }}</td>
                                             <td>{{ review.book.title }}</td>
                                             <td>{{ review.date }}</td>
                                             <td>{{ '⭐'.repeat(review.rating) }}</td>
@@ -1236,7 +1504,7 @@
                         <div class="modal">
                             <h3>감상문 검토</h3>
                             <p><strong>도서:</strong> {{ selectedReview.book.title }}</p>
-                            <p><strong>작성자:</strong> 사용자{{ selectedReview.userId }}</p>
+                            <p><strong>작성자:</strong> {{ selectedReview.userName || '사용자' + selectedReview.userId }}</p>
                             <p><strong>작성일:</strong> {{ selectedReview.date }}</p>
                             <p><strong>별점:</strong> {{ '⭐'.repeat(selectedReview.rating) }}</p>
                             <div class="form-group">
@@ -1254,7 +1522,7 @@
             `,
             data() {
                 return {
-                    reviews: store.reviews,
+                    reviews: store.getReviews(),
                     selectedReview: null
                 };
             },
@@ -1271,21 +1539,27 @@
                     this.selectedReview = review;
                 },
                 approveReview(review) {
-                    review.status = 'approved';
-                    // 포인트 지급 (실제로는 userId에 해당하는 사용자를 찾아야 함)
+                    store.updateReview(review.id, { status: 'approved' });
+                    // 사용자 찾기
+                    const user = store.getUsers().find(u => u.id === review.userId);
+                    if (user) {
+                        store.addUserPoints(user.email, 100);
+                    }
                     alert('감상문이 승인되었습니다. 사용자에게 100 포인트가 지급되었습니다.');
                     this.selectedReview = null;
+                    this.reviews = store.getReviews();
                 },
                 rejectReview(review) {
                     const reason = prompt('반려 사유를 입력하세요:');
                     if (reason) {
-                        review.status = 'rejected';
+                        store.updateReview(review.id, { status: 'rejected' });
                         alert('감상문이 반려되었습니다.');
                         this.selectedReview = null;
+                        this.reviews = store.getReviews();
                     }
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1368,7 +1642,7 @@
             `,
             data() {
                 return {
-                    books: store.books,
+                    books: store.getBooks(),
                     showAddForm: false,
                     newBook: {
                         title: '',
@@ -1381,19 +1655,20 @@
             methods: {
                 addBook() {
                     const book = {
-                        id: store.books.length + 1,
+                        id: Date.now(),
                         ...this.newBook
                     };
-                    store.books.push(book);
+                    store.addBook(book);
                     this.showAddForm = false;
                     this.newBook = { title: '', author: '', isbn: '', genre: '' };
+                    this.books = store.getBooks();
                     alert('도서가 등록되었습니다.');
                 },
                 editBook(book) {
                     alert('도서 수정 기능 (구현 예정)');
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1422,7 +1697,7 @@
                             <h3>월별 독서 활동 현황</h3>
                             <div class="stats-grid">
                                 <div class="stat-card">
-                                    <h3>342</h3>
+                                    <h3>{{ monthlyReviews }}</h3>
                                     <p>이번 달 감상문</p>
                                 </div>
                                 <div class="stat-card">
@@ -1434,7 +1709,7 @@
                                     <p>퀴즈 평균 정답률</p>
                                 </div>
                                 <div class="stat-card">
-                                    <h3>2,450</h3>
+                                    <h3>{{ totalPoints }}</h3>
                                     <p>총 지급 포인트</p>
                                 </div>
                             </div>
@@ -1482,12 +1757,18 @@
                     </div>
                 </div>
             `,
+            data() {
+                return {
+                    monthlyReviews: store.getReviews().length,
+                    totalPoints: Object.values(storage.get(STORAGE_KEYS.USER_POINTS) || {}).reduce((a, b) => a + b, 0)
+                };
+            },
             methods: {
                 exportReport() {
                     alert('리포트가 CSV 파일로 내보내졌습니다.');
                 },
                 logout() {
-                    store.currentUser = null;
+                    store.clearCurrentUser();
                     this.$router.push('/');
                 }
             }
@@ -1496,6 +1777,7 @@
         // 라우터 설정
         const routes = [
             { path: '/', component: Login },
+            { path: '/signup', component: Signup },
             { path: '/dashboard', component: UserDashboard },
             { path: '/books', component: BookSearch },
             { path: '/review/:id', component: ReviewWrite },
@@ -1515,7 +1797,7 @@
 
         // 라우터 가드
         router.beforeEach((to, from, next) => {
-            const publicPages = ['/'];
+            const publicPages = ['/', '/signup'];
             const authRequired = !publicPages.includes(to.path);
             const loggedIn = store.currentUser;
 
@@ -1528,8 +1810,8 @@
                 return next('/dashboard');
             }
 
-            // 사용자 페이지 접근 제어 (관리자가 사용자 페이지 접근 시 리다이렉트)
-            if (!to.path.startsWith('/admin') && to.path !== '/' && loggedIn && loggedIn.type === 'admin') {
+            // 사용자 페이지 접근 제어
+            if (!to.path.startsWith('/admin') && !publicPages.includes(to.path) && loggedIn && loggedIn.type === 'admin') {
                 return next('/admin');
             }
 
