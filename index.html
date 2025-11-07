@@ -225,6 +225,13 @@
             border-radius: 15px;
             color: white;
             text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
 
         .stat-card h3 {
@@ -298,6 +305,16 @@
 
         tr:hover {
             background: #f8f9fa;
+        }
+
+        td.clickable {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        td.clickable:hover {
+            color: #764ba2;
         }
 
         /* 검색 바 */
@@ -434,6 +451,18 @@
             color: white;
         }
 
+        .quiz-option.correct {
+            border-color: #28a745;
+            background: #28a745;
+            color: white;
+        }
+
+        .quiz-option.incorrect {
+            border-color: #dc3545;
+            background: #dc3545;
+            color: white;
+        }
+
         /* 녹음 버튼 */
         .record-btn {
             width: 60px;
@@ -499,6 +528,40 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+
+        /* 상세 페이지 */
+        .detail-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .detail-header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .detail-content {
+            line-height: 1.8;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .back-button {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -514,7 +577,8 @@
             CURRENT_USER: 'reading_platform_current_user',
             BOOKS: 'reading_platform_books',
             REVIEWS: 'reading_platform_reviews',
-            USER_POINTS: 'reading_platform_points'
+            USER_POINTS: 'reading_platform_points',
+            QUIZ_RESULTS: 'reading_platform_quiz_results'
         };
 
         // LocalStorage 유틸리티
@@ -552,6 +616,10 @@
 
         if (!storage.get(STORAGE_KEYS.USER_POINTS)) {
             storage.set(STORAGE_KEYS.USER_POINTS, {});
+        }
+
+        if (!storage.get(STORAGE_KEYS.QUIZ_RESULTS)) {
+            storage.set(STORAGE_KEYS.QUIZ_RESULTS, []);
         }
 
         // Mock 데이터 저장소
@@ -599,6 +667,16 @@
                     reviews[index] = { ...reviews[index], ...updates };
                     storage.set(STORAGE_KEYS.REVIEWS, reviews);
                 }
+            },
+            
+            getQuizResults() {
+                return storage.get(STORAGE_KEYS.QUIZ_RESULTS) || [];
+            },
+            
+            addQuizResult(result) {
+                const results = this.getQuizResults();
+                results.push(result);
+                storage.set(STORAGE_KEYS.QUIZ_RESULTS, results);
             },
             
             getUserPoints(email) {
@@ -720,18 +798,16 @@
                     }
                 },
                 handleSignup() {
-                    // 이메일 중복 체크
                     if (store.findUserByEmail(this.email)) {
                         this.errorMessage = '이미 등록된 이메일입니다.';
                         return;
                     }
 
-                    // 새 사용자 생성
                     const newUser = {
                         id: Date.now(),
                         name: this.name,
                         email: this.email,
-                        password: this.password, // 실제로는 암호화해야 함
+                        password: this.password,
                         type: this.userType,
                         createdAt: new Date().toISOString()
                     };
@@ -779,7 +855,6 @@
             },
             methods: {
                 handleLogin() {
-                    // 사용자 찾기
                     const user = store.findUserByEmail(this.email);
                     
                     if (!user) {
@@ -792,7 +867,6 @@
                         return;
                     }
 
-                    // 로그인 성공
                     const loginUser = {
                         id: user.id,
                         email: user.email,
@@ -833,15 +907,15 @@
                         <div class="dashboard">
                             <h2>안녕하세요, {{ user.name }}님! 👋</h2>
                             <div class="stats-grid">
-                                <div class="stat-card">
+                                <div class="stat-card" @click="$router.push('/my-reviews')">
                                     <h3>{{ reviewCount }}</h3>
                                     <p>작성한 감상문</p>
                                 </div>
-                                <div class="stat-card">
+                                <div class="stat-card" @click="$router.push('/completed-quizzes')">
                                     <h3>{{ quizCount }}</h3>
                                     <p>완료한 퀴즈</p>
                                 </div>
-                                <div class="stat-card">
+                                <div class="stat-card" @click="$router.push('/points')">
                                     <h3>{{ user.points }}</h3>
                                     <p>보유 포인트</p>
                                 </div>
@@ -872,7 +946,7 @@
                 return {
                     user: store.currentUser,
                     reviewCount: store.getReviews().filter(r => r.userId === store.currentUser.id).length,
-                    quizCount: 0
+                    quizCount: store.getQuizResults().filter(q => q.userId === store.currentUser.id).length
                 };
             },
             methods: {
@@ -893,7 +967,8 @@
                             <div class="navbar-nav">
                                 <router-link to="/dashboard" class="nav-link">대시보드</router-link>
                                 <router-link to="/books" class="nav-link active">도서 검색</router-link>
-                                <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
                                 <router-link to="/points" class="nav-link">포인트</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1002,7 +1077,8 @@
                             <div class="navbar-nav">
                                 <router-link to="/dashboard" class="nav-link">대시보드</router-link>
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
-                                <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
                         </div>
@@ -1207,15 +1283,42 @@
                 },
                 submitQuiz() {
                     let correct = 0;
+                    const answerDetails = [];
+                    
                     this.quiz.questions.forEach((q, index) => {
-                        if (this.answers[index] === q.answer) {
+                        const isCorrect = this.answers[index] === q.answer;
+                        if (isCorrect) {
                             correct++;
                         }
+                        answerDetails.push({
+                            question: q.question,
+                            selectedAnswer: this.answers[index],
+                            correctAnswer: q.answer,
+                            isCorrect: isCorrect
+                        });
                     });
                     
                     this.correctAnswers = correct;
                     this.score = Math.round((correct / this.quiz.questions.length) * 100);
                     this.quizCompleted = true;
+                    
+                    // 퀴즈 결과 저장
+                    const quizResult = {
+                        id: Date.now(),
+                        userId: store.currentUser.id,
+                        userName: store.currentUser.name,
+                        bookId: this.bookId,
+                        book: this.book,
+                        quizId: this.quiz.id,
+                        score: this.score,
+                        correctAnswers: this.correctAnswers,
+                        totalQuestions: this.quiz.questions.length,
+                        answers: answerDetails,
+                        date: new Date().toLocaleDateString(),
+                        isPassed: this.score >= 80
+                    };
+                    
+                    store.addQuizResult(quizResult);
                     
                     if (this.score >= 80) {
                         store.addUserPoints(store.currentUser.email, 50);
@@ -1228,7 +1331,7 @@
             }
         };
 
-        // 내 감상문 컴포넌트
+        // 작성한 감상문 컴포넌트
         const MyReviews = {
             template: `
                 <div>
@@ -1238,7 +1341,8 @@
                             <div class="navbar-nav">
                                 <router-link to="/dashboard" class="nav-link">대시보드</router-link>
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
-                                <router-link to="/my-reviews" class="nav-link active">내 감상문</router-link>
+                                <router-link to="/my-reviews" class="nav-link active">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
                                 <router-link to="/points" class="nav-link">포인트</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1246,7 +1350,10 @@
                     </nav>
                     <div class="container">
                         <div class="dashboard">
-                            <h2>내 감상문 📝</h2>
+                            <h2>작성한 감상문 📝</h2>
+                            <div style="margin-bottom: 20px;">
+                                <button @click="$router.push('/books')" class="btn btn-sm">+ 새로운 감상문 작성하기</button>
+                            </div>
                             <div v-if="myReviews.length > 0" class="table-container">
                                 <table>
                                     <thead>
@@ -1268,7 +1375,9 @@
                                                     {{ getStatusText(review.status) }}
                                                 </span>
                                             </td>
-                                            <td>{{ review.content.substring(0, 50) }}...</td>
+                                            <td class="clickable" @click="viewDetail(review.id)">
+                                                {{ review.content.substring(0, 30) }}...
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -1295,6 +1404,250 @@
                     };
                     return statusMap[status] || status;
                 },
+                viewDetail(reviewId) {
+                    this.$router.push(`/review-detail/${reviewId}`);
+                },
+                logout() {
+                    store.clearCurrentUser();
+                    this.$router.push('/');
+                }
+            }
+        };
+
+        // 감상문 상세 컴포넌트
+        const ReviewDetail = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 독서 플랫폼</div>
+                            <div class="navbar-nav">
+                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+                                <router-link to="/books" class="nav-link">도서 검색</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
+                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <div class="back-button">
+                                <button @click="$router.back()" class="btn btn-sm btn-secondary">← 목록으로</button>
+                            </div>
+                            <div v-if="review" class="detail-container">
+                                <div class="detail-header">
+                                    <h2>{{ review.book.title }}</h2>
+                                    <p style="color: #666;">{{ review.book.author }}</p>
+                                </div>
+                                <div class="detail-meta">
+                                    <span><strong>작성일:</strong> {{ review.date }}</span>
+                                    <span><strong>별점:</strong> {{ '⭐'.repeat(review.rating) }}</span>
+                                    <span><strong>상태:</strong> 
+                                        <span :class="['badge', 'badge-' + review.status]">
+                                            {{ getStatusText(review.status) }}
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="detail-content" style="margin-top: 30px;">
+                                    <h3 style="margin-bottom: 15px;">감상문 내용</h3>
+                                    <p style="white-space: pre-wrap;">{{ review.content }}</p>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <p>감상문을 찾을 수 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    reviewId: this.$route.params.id,
+                    review: null
+                };
+            },
+            mounted() {
+                const reviews = store.getReviews();
+                this.review = reviews.find(r => r.id == this.reviewId);
+            },
+            methods: {
+                getStatusText(status) {
+                    const statusMap = {
+                        'pending': '승인 대기',
+                        'approved': '승인 완료',
+                        'rejected': '반려'
+                    };
+                    return statusMap[status] || status;
+                },
+                logout() {
+                    store.clearCurrentUser();
+                    this.$router.push('/');
+                }
+            }
+        };
+
+        // 완료한 퀴즈 컴포넌트
+        const CompletedQuizzes = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 독서 플랫폼</div>
+                            <div class="navbar-nav">
+                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+                                <router-link to="/books" class="nav-link">도서 검색</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link active">완료한 퀴즈</router-link>
+                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <h2>완료한 퀴즈 🎯</h2>
+                            <div style="margin-bottom: 20px;">
+                                <button @click="$router.push('/books')" class="btn btn-sm">+ 새로운 퀴즈 도전하기</button>
+                            </div>
+                            <div v-if="myQuizzes.length > 0" class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>도서명</th>
+                                            <th>응시일</th>
+                                            <th>점수</th>
+                                            <th>정답 수</th>
+                                            <th>결과</th>
+                                            <th>상세</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="quiz in myQuizzes" :key="quiz.id">
+                                            <td>{{ quiz.book.title }}</td>
+                                            <td>{{ quiz.date }}</td>
+                                            <td><strong>{{ quiz.score }}점</strong></td>
+                                            <td>{{ quiz.correctAnswers }} / {{ quiz.totalQuestions }}</td>
+                                            <td>
+                                                <span :class="['badge', quiz.isPassed ? 'badge-approved' : 'badge-rejected']">
+                                                    {{ quiz.isPassed ? '통과' : '불합격' }}
+                                                </span>
+                                            </td>
+                                            <td class="clickable" @click="viewDetail(quiz.id)">
+                                                상세보기
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else style="text-align: center; padding: 40px; color: #666;">
+                                <p>아직 완료한 퀴즈가 없습니다.</p>
+                                <button @click="$router.push('/books')" class="btn btn-sm" style="margin-top: 20px;">퀴즈 도전하기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            computed: {
+                myQuizzes() {
+                    return store.getQuizResults().filter(q => q.userId === store.currentUser.id);
+                }
+            },
+            methods: {
+                viewDetail(quizId) {
+                    this.$router.push(`/quiz-result/${quizId}`);
+                },
+                logout() {
+                    store.clearCurrentUser();
+                    this.$router.push('/');
+                }
+            }
+        };
+
+        // 퀴즈 결과 상세 컴포넌트
+        const QuizResultDetail = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 독서 플랫폼</div>
+                            <div class="navbar-nav">
+                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+                                <router-link to="/books" class="nav-link">도서 검색</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
+                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <div class="back-button">
+                                <button @click="$router.back()" class="btn btn-sm btn-secondary">← 목록으로</button>
+                            </div>
+                            <div v-if="quizResult" class="detail-container">
+                                <div class="detail-header">
+                                    <h2>{{ quizResult.book.title }} - 퀴즈 결과</h2>
+                                    <p style="color: #666;">{{ quizResult.book.author }}</p>
+                                </div>
+                                <div class="detail-meta">
+                                    <span><strong>응시일:</strong> {{ quizResult.date }}</span>
+                                    <span><strong>점수:</strong> {{ quizResult.score }}점</span>
+                                    <span><strong>정답률:</strong> {{ quizResult.correctAnswers }} / {{ quizResult.totalQuestions }}</span>
+                                    <span><strong>결과:</strong> 
+                                        <span :class="['badge', quizResult.isPassed ? 'badge-approved' : 'badge-rejected']">
+                                            {{ quizResult.isPassed ? '통과 ✓' : '불합격 ✗' }}
+                                        </span>
+                                    </span>
+                                </div>
+                                <div style="margin-top: 30px;">
+                                    <h3 style="margin-bottom: 20px;">문제별 결과</h3>
+                                    <div v-for="(answer, index) in quizResult.answers" :key="index" class="quiz-question">
+                                        <h4>{{ index + 1 }}. {{ answer.question }}</h4>
+                                        <div class="quiz-options">
+                                            <div v-for="(option, optIndex) in getQuizOptions(quizResult.bookId, index)" :key="optIndex"
+                                                 :class="getOptionClass(answer, optIndex)">
+                                                {{ optIndex + 1 }}. {{ option }}
+                                                <span v-if="optIndex === answer.correctAnswer"> ✓ 정답</span>
+                                                <span v-if="optIndex === answer.selectedAnswer && !answer.isCorrect"> ✗ 선택</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else>
+                                <p>퀴즈 결과를 찾을 수 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    quizResultId: this.$route.params.id,
+                    quizResult: null
+                };
+            },
+            mounted() {
+                const results = store.getQuizResults();
+                this.quizResult = results.find(q => q.id == this.quizResultId);
+            },
+            methods: {
+                getQuizOptions(bookId, questionIndex) {
+                    const quiz = store.quizzes.find(q => q.bookId == bookId);
+                    return quiz ? quiz.questions[questionIndex].options : [];
+                },
+                getOptionClass(answer, optIndex) {
+                    if (optIndex === answer.correctAnswer) {
+                        return 'quiz-option correct';
+                    }
+                    if (optIndex === answer.selectedAnswer && !answer.isCorrect) {
+                        return 'quiz-option incorrect';
+                    }
+                    return 'quiz-option';
+                },
                 logout() {
                     store.clearCurrentUser();
                     this.$router.push('/');
@@ -1312,7 +1665,8 @@
                             <div class="navbar-nav">
                                 <router-link to="/dashboard" class="nav-link">대시보드</router-link>
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
-                                <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
                                 <router-link to="/points" class="nav-link active">포인트</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1390,15 +1744,15 @@
                                     <h3>{{ totalUsers }}</h3>
                                     <p>총 사용자</p>
                                 </div>
-                                <div class="stat-card">
+                                <div class="stat-card" @click="$router.push('/admin/reviews')">
                                     <h3>{{ pendingReviews }}</h3>
                                     <p>승인 대기 감상문</p>
                                 </div>
-                                <div class="stat-card">
+                                <div class="stat-card" @click="$router.push('/admin/books')">
                                     <h3>{{ totalBooks }}</h3>
                                     <p>등록된 도서</p>
                                 </div>
-                                <div class="stat-card">
+                                <div class="stat-card" @click="$router.push('/admin/reviews')">
                                     <h3>{{ totalReviews }}</h3>
                                     <p>전체 감상문</p>
                                 </div>
@@ -1541,7 +1895,6 @@
                 },
                 approveReview(review) {
                     store.updateReview(review.id, { status: 'approved' });
-                    // 사용자 찾기
                     const user = store.getUsers().find(u => u.id === review.userId);
                     if (user) {
                         store.addUserPoints(user.email, 100);
@@ -1702,7 +2055,7 @@
                                     <p>이번 달 감상문</p>
                                 </div>
                                 <div class="stat-card">
-                                    <h3>528</h3>
+                                    <h3>{{ monthlyQuizzes }}</h3>
                                     <p>이번 달 퀴즈 응시</p>
                                 </div>
                                 <div class="stat-card">
@@ -1761,6 +2114,7 @@
             data() {
                 return {
                     monthlyReviews: store.getReviews().length,
+                    monthlyQuizzes: store.getQuizResults().length,
                     totalPoints: Object.values(storage.get(STORAGE_KEYS.USER_POINTS) || {}).reduce((a, b) => a + b, 0)
                 };
             },
@@ -1784,6 +2138,9 @@
             { path: '/review/:id', component: ReviewWrite },
             { path: '/quiz/:id', component: Quiz },
             { path: '/my-reviews', component: MyReviews },
+            { path: '/review-detail/:id', component: ReviewDetail },
+            { path: '/completed-quizzes', component: CompletedQuizzes },
+            { path: '/quiz-result/:id', component: QuizResultDetail },
             { path: '/points', component: Points },
             { path: '/admin', component: AdminDashboard },
             { path: '/admin/reviews', component: AdminReviews },
@@ -1806,12 +2163,10 @@
                 return next('/');
             }
 
-            // 관리자 페이지 접근 제어
             if (to.path.startsWith('/admin') && loggedIn && loggedIn.type !== 'admin') {
                 return next('/dashboard');
             }
 
-            // 사용자 페이지 접근 제어
             if (!to.path.startsWith('/admin') && !publicPages.includes(to.path) && loggedIn && loggedIn.type === 'admin') {
                 return next('/admin');
             }
