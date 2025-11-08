@@ -130,6 +130,11 @@
             background: #28a745;
         }
 
+        .btn-warning {
+            background: #ffc107;
+            color: #000;
+        }
+
         .btn-sm {
             width: auto;
             padding: 8px 16px;
@@ -401,6 +406,25 @@
             color: white;
         }
 
+        /* 알림 박스 */
+        .alert-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-box.warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+        }
+
+        .alert-box.danger {
+            background: #f8d7da;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+
         /* 반응형 */
         @media (max-width: 768px) {
             .navbar-nav {
@@ -562,6 +586,12 @@
         .back-button {
             margin-bottom: 20px;
         }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -578,7 +608,8 @@
             BOOKS: 'reading_platform_books',
             REVIEWS: 'reading_platform_reviews',
             USER_POINTS: 'reading_platform_points',
-            QUIZ_RESULTS: 'reading_platform_quiz_results'
+            QUIZ_RESULTS: 'reading_platform_quiz_results',
+            REWARD_REQUESTS: 'reading_platform_reward_requests'
         };
 
         // LocalStorage 유틸리티
@@ -620,6 +651,10 @@
 
         if (!storage.get(STORAGE_KEYS.QUIZ_RESULTS)) {
             storage.set(STORAGE_KEYS.QUIZ_RESULTS, []);
+        }
+
+        if (!storage.get(STORAGE_KEYS.REWARD_REQUESTS)) {
+            storage.set(STORAGE_KEYS.REWARD_REQUESTS, []);
         }
 
         // Mock 데이터 저장소
@@ -679,6 +714,25 @@
                 storage.set(STORAGE_KEYS.QUIZ_RESULTS, results);
             },
             
+            getRewardRequests() {
+                return storage.get(STORAGE_KEYS.REWARD_REQUESTS) || [];
+            },
+            
+            addRewardRequest(request) {
+                const requests = this.getRewardRequests();
+                requests.push(request);
+                storage.set(STORAGE_KEYS.REWARD_REQUESTS, requests);
+            },
+            
+            updateRewardRequest(requestId, updates) {
+                const requests = this.getRewardRequests();
+                const index = requests.findIndex(r => r.id === requestId);
+                if (index !== -1) {
+                    requests[index] = { ...requests[index], ...updates };
+                    storage.set(STORAGE_KEYS.REWARD_REQUESTS, requests);
+                }
+            },
+            
             getUserPoints(email) {
                 const points = storage.get(STORAGE_KEYS.USER_POINTS) || {};
                 return points[email] || 0;
@@ -701,6 +755,24 @@
             clearCurrentUser() {
                 this.currentUser = null;
                 storage.remove(STORAGE_KEYS.CURRENT_USER);
+            },
+            
+            // 중복 체크 함수
+            hasReviewForBook(userId, bookId) {
+                const reviews = this.getReviews();
+                return reviews.some(r => 
+                    r.userId === userId && 
+                    r.bookId == bookId && 
+                    r.status !== 'rejected'
+                );
+            },
+            
+            hasQuizForBook(userId, bookId) {
+                const results = this.getQuizResults();
+                return results.some(q => 
+                    q.userId === userId && 
+                    q.bookId == bookId
+                );
             },
             
             quizzes: [
@@ -1055,9 +1127,19 @@
                     this.selectedBook = book;
                 },
                 startReview() {
+                    // 중복 체크
+                    if (store.hasReviewForBook(store.currentUser.id, this.selectedBook.id)) {
+                        alert('이미 감상문을 제출한 도서입니다.');
+                        return;
+                    }
                     this.$router.push(`/review/${this.selectedBook.id}`);
                 },
                 startQuiz() {
+                    // 중복 체크
+                    if (store.hasQuizForBook(store.currentUser.id, this.selectedBook.id)) {
+                        alert('이미 퀴즈를 푼 책입니다.');
+                        return;
+                    }
                     this.$router.push(`/quiz/${this.selectedBook.id}`);
                 },
                 logout() {
@@ -1067,7 +1149,7 @@
             }
         };
 
-        // 감상문 작성 컴포넌트
+        // 감상문 작성/수정 컴포넌트
         const ReviewWrite = {
             template: `
                 <div>
@@ -1085,9 +1167,13 @@
                     </nav>
                     <div class="container">
                         <div class="dashboard">
-                            <h2>감상문 작성 ✍️</h2>
+                            <h2>{{ isEdit ? '감상문 수정' : '감상문 작성' }} ✍️</h2>
                             <div v-if="book">
                                 <h3>{{ book.title }} - {{ book.author }}</h3>
+                                
+                                <div v-if="existingReview && existingReview.status === 'rejected'" class="alert-box danger">
+                                    <strong>반려 사유:</strong> {{ existingReview.rejectionReason }}
+                                </div>
                                 
                                 <div class="form-group">
                                     <label>작성 방법 선택</label>
@@ -1125,7 +1211,7 @@
                                     </div>
                                 </div>
 
-                                <button @click="submitReview" :disabled="!canSubmit" class="btn">제출하기</button>
+                                <button @click="submitReview" :disabled="!canSubmit" class="btn">{{ isEdit ? '수정 완료' : '제출하기' }}</button>
                                 <button @click="$router.back()" class="btn btn-secondary" style="margin-top: 10px;">취소</button>
                             </div>
                         </div>
@@ -1135,7 +1221,10 @@
             data() {
                 return {
                     bookId: this.$route.params.id,
+                    reviewId: this.$route.query.reviewId,
                     book: null,
+                    existingReview: null,
+                    isEdit: false,
                     writeMethod: 'text',
                     reviewText: '',
                     rating: 5,
@@ -1156,6 +1245,18 @@
             mounted() {
                 const books = store.getBooks();
                 this.book = books.find(b => b.id == this.bookId);
+                
+                // 수정 모드인 경우
+                if (this.reviewId) {
+                    const reviews = store.getReviews();
+                    this.existingReview = reviews.find(r => r.id == this.reviewId);
+                    if (this.existingReview) {
+                        this.isEdit = true;
+                        this.reviewText = this.existingReview.content;
+                        this.rating = this.existingReview.rating;
+                        this.writeMethod = this.existingReview.method;
+                    }
+                }
             },
             methods: {
                 toggleRecording() {
@@ -1174,22 +1275,36 @@
                     }
                 },
                 submitReview() {
-                    const review = {
-                        id: Date.now(),
-                        userId: store.currentUser.id,
-                        userName: store.currentUser.name,
-                        bookId: this.bookId,
-                        book: this.book,
-                        method: this.writeMethod,
-                        content: this.writeMethod === 'text' ? this.reviewText : `음성 녹음 (${this.recordingTime}초)`,
-                        rating: this.rating,
-                        status: 'pending',
-                        date: new Date().toLocaleDateString()
-                    };
+                    if (this.isEdit) {
+                        // 수정
+                        const updates = {
+                            content: this.writeMethod === 'text' ? this.reviewText : `음성 녹음 (${this.recordingTime}초)`,
+                            rating: this.rating,
+                            method: this.writeMethod,
+                            status: 'pending' // 수정 후 다시 pending 상태로
+                        };
+                        
+                        store.updateReview(this.existingReview.id, updates);
+                        alert('감상문이 수정되었습니다! 관리자 재승인을 기다려주세요.');
+                    } else {
+                        // 새로 작성
+                        const review = {
+                            id: Date.now(),
+                            userId: store.currentUser.id,
+                            userName: store.currentUser.name,
+                            bookId: this.bookId,
+                            book: this.book,
+                            method: this.writeMethod,
+                            content: this.writeMethod === 'text' ? this.reviewText : `음성 녹음 (${this.recordingTime}초)`,
+                            rating: this.rating,
+                            status: 'pending',
+                            date: new Date().toLocaleDateString()
+                        };
+                        
+                        store.addReview(review);
+                        alert('감상문이 제출되었습니다! 관리자 승인 후 포인트가 지급됩니다.');
+                    }
                     
-                    store.addReview(review);
-                    
-                    alert('감상문이 제출되었습니다! 관리자 승인 후 포인트가 지급됩니다.');
                     this.$router.push('/my-reviews');
                 },
                 logout() {
@@ -1252,7 +1367,7 @@
                                         축하합니다! 50 포인트를 획득하셨습니다! 🎁
                                     </p>
                                     <p v-else style="color: #dc3545;">
-                                        아쉽네요. 80점 이상이어야 포인트를 획득할 수 있습니다. 다시 도전해보세요!
+                                        아쉽네요. 80점 이상이어야 포인트를 획득할 수 있습니다.
                                     </p>
                                     <button @click="$router.push('/dashboard')" class="btn" style="margin-top: 20px;">대시보드로</button>
                                 </div>
@@ -1302,7 +1417,6 @@
                     this.score = Math.round((correct / this.quiz.questions.length) * 100);
                     this.quizCompleted = true;
                     
-                    // 퀴즈 결과 저장
                     const quizResult = {
                         id: Date.now(),
                         userId: store.currentUser.id,
@@ -1363,6 +1477,7 @@
                                             <th>별점</th>
                                             <th>상태</th>
                                             <th>내용</th>
+                                            <th>관리</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1377,6 +1492,13 @@
                                             </td>
                                             <td class="clickable" @click="viewDetail(review.id)">
                                                 {{ review.content.substring(0, 30) }}...
+                                            </td>
+                                            <td>
+                                                <button v-if="review.status === 'pending' || review.status === 'rejected'" 
+                                                        @click="editReview(review)" 
+                                                        class="btn btn-sm">
+                                                    수정
+                                                </button>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1406,6 +1528,9 @@
                 },
                 viewDetail(reviewId) {
                     this.$router.push(`/review-detail/${reviewId}`);
+                },
+                editReview(review) {
+                    this.$router.push(`/review/${review.bookId}?reviewId=${review.id}`);
                 },
                 logout() {
                     store.clearCurrentUser();
@@ -1441,6 +1566,11 @@
                                     <h2>{{ review.book.title }}</h2>
                                     <p style="color: #666;">{{ review.book.author }}</p>
                                 </div>
+                                
+                                <div v-if="review.status === 'rejected'" class="alert-box danger">
+                                    <strong>⚠️ 반려 사유:</strong> {{ review.rejectionReason }}
+                                </div>
+                                
                                 <div class="detail-meta">
                                     <span><strong>작성일:</strong> {{ review.date }}</span>
                                     <span><strong>별점:</strong> {{ '⭐'.repeat(review.rating) }}</span>
@@ -1453,6 +1583,10 @@
                                 <div class="detail-content" style="margin-top: 30px;">
                                     <h3 style="margin-bottom: 15px;">감상문 내용</h3>
                                     <p style="white-space: pre-wrap;">{{ review.content }}</p>
+                                </div>
+                                
+                                <div v-if="review.status === 'pending' || review.status === 'rejected'" class="button-group">
+                                    <button @click="editReview" class="btn btn-sm">수정하기</button>
                                 </div>
                             </div>
                             <div v-else>
@@ -1480,6 +1614,9 @@
                         'rejected': '반려'
                     };
                     return statusMap[status] || status;
+                },
+                editReview() {
+                    this.$router.push(`/review/${this.review.bookId}?reviewId=${this.review.id}`);
                 },
                 logout() {
                     store.clearCurrentUser();
@@ -1708,8 +1845,23 @@
             methods: {
                 requestReward(reward) {
                     if (confirm(`${reward.name}을(를) ${reward.points} 포인트로 신청하시겠습니까?`)) {
+                        // 포인트 차감
                         store.addUserPoints(store.currentUser.email, -reward.points);
                         this.currentPoints = store.getUserPoints(store.currentUser.email);
+                        
+                        // 보상 신청 내역 저장
+                        const request = {
+                            id: Date.now(),
+                            userId: store.currentUser.id,
+                            userName: store.currentUser.name,
+                            userEmail: store.currentUser.email,
+                            reward: reward,
+                            pointsSpent: reward.points,
+                            status: 'pending',
+                            date: new Date().toLocaleDateString()
+                        };
+                        
+                        store.addRewardRequest(request);
                         alert('보상이 신청되었습니다! 관리자 확인 후 지급됩니다.');
                     }
                 },
@@ -1731,6 +1883,7 @@
                                 <router-link to="/admin" class="nav-link active">대시보드</router-link>
                                 <router-link to="/admin/reviews" class="nav-link">감상문 관리</router-link>
                                 <router-link to="/admin/books" class="nav-link">도서 관리</router-link>
+                                <router-link to="/admin/rewards" class="nav-link">보상 관리</router-link>
                                 <router-link to="/admin/stats" class="nav-link">통계</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1752,9 +1905,9 @@
                                     <h3>{{ totalBooks }}</h3>
                                     <p>등록된 도서</p>
                                 </div>
-                                <div class="stat-card" @click="$router.push('/admin/reviews')">
-                                    <h3>{{ totalReviews }}</h3>
-                                    <p>전체 감상문</p>
+                                <div class="stat-card" @click="$router.push('/admin/rewards')">
+                                    <h3>{{ pendingRewards }}</h3>
+                                    <p>보상 신청 대기</p>
                                 </div>
                             </div>
 
@@ -1766,14 +1919,14 @@
                                     <button @click="$router.push('/admin/reviews')" class="btn btn-sm">확인하기</button>
                                 </div>
                                 <div class="card">
+                                    <h3>🎁 보상 신청</h3>
+                                    <p>{{ pendingRewards }}개의 보상 신청이 처리를 기다리고 있습니다.</p>
+                                    <button @click="$router.push('/admin/rewards')" class="btn btn-sm">확인하기</button>
+                                </div>
+                                <div class="card">
                                     <h3>📚 도서 관리</h3>
                                     <p>신규 도서를 등록하거나 메타데이터를 관리하세요.</p>
                                     <button @click="$router.push('/admin/books')" class="btn btn-sm">관리하기</button>
-                                </div>
-                                <div class="card">
-                                    <h3>📊 통계 확인</h3>
-                                    <p>독서 활동 현황과 학습 성과를 확인하세요.</p>
-                                    <button @click="$router.push('/admin/stats')" class="btn btn-sm">보기</button>
                                 </div>
                             </div>
                         </div>
@@ -1785,7 +1938,7 @@
                     totalUsers: store.getUsers().length,
                     pendingReviews: store.getReviews().filter(r => r.status === 'pending').length,
                     totalBooks: store.getBooks().length,
-                    totalReviews: store.getReviews().length
+                    pendingRewards: store.getRewardRequests().filter(r => r.status === 'pending').length
                 };
             },
             methods: {
@@ -1807,6 +1960,7 @@
                                 <router-link to="/admin" class="nav-link">대시보드</router-link>
                                 <router-link to="/admin/reviews" class="nav-link active">감상문 관리</router-link>
                                 <router-link to="/admin/books" class="nav-link">도서 관리</router-link>
+                                <router-link to="/admin/rewards" class="nav-link">보상 관리</router-link>
                                 <router-link to="/admin/stats" class="nav-link">통계</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1868,8 +2022,18 @@
                             </div>
                             <div class="modal-actions">
                                 <button @click="approveReview(selectedReview)" class="btn btn-sm btn-success">승인 (100P 지급)</button>
-                                <button @click="rejectReview(selectedReview)" class="btn btn-sm btn-danger">반려</button>
-                                <button @click="selectedReview = null" class="btn btn-sm btn-secondary">닫기</button>
+                                <button @click="showRejectForm = true" class="btn btn-sm btn-danger">반려</button>
+                                <button @click="selectedReview = null; showRejectForm = false" class="btn btn-sm btn-secondary">닫기</button>
+                            </div>
+                            
+                            <div v-if="showRejectForm" style="margin-top: 20px;">
+                                <div class="form-group">
+                                    <label>반려 사유</label>
+                                    <textarea v-model="rejectionReason" rows="4" placeholder="반려 사유를 입력하세요..."></textarea>
+                                </div>
+                                <button @click="rejectReview(selectedReview)" class="btn btn-sm btn-danger" :disabled="!rejectionReason">
+                                    반려 확정
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1878,7 +2042,9 @@
             data() {
                 return {
                     reviews: store.getReviews(),
-                    selectedReview: null
+                    selectedReview: null,
+                    showRejectForm: false,
+                    rejectionReason: ''
                 };
             },
             methods: {
@@ -1892,6 +2058,8 @@
                 },
                 viewReview(review) {
                     this.selectedReview = review;
+                    this.showRejectForm = false;
+                    this.rejectionReason = '';
                 },
                 approveReview(review) {
                     store.updateReview(review.id, { status: 'approved' });
@@ -1904,12 +2072,118 @@
                     this.reviews = store.getReviews();
                 },
                 rejectReview(review) {
-                    const reason = prompt('반려 사유를 입력하세요:');
-                    if (reason) {
-                        store.updateReview(review.id, { status: 'rejected' });
-                        alert('감상문이 반려되었습니다.');
-                        this.selectedReview = null;
-                        this.reviews = store.getReviews();
+                    if (!this.rejectionReason) {
+                        alert('반려 사유를 입력해주세요.');
+                        return;
+                    }
+                    
+                    store.updateReview(review.id, { 
+                        status: 'rejected',
+                        rejectionReason: this.rejectionReason
+                    });
+                    alert('감상문이 반려되었습니다.');
+                    this.selectedReview = null;
+                    this.showRejectForm = false;
+                    this.rejectionReason = '';
+                    this.reviews = store.getReviews();
+                },
+                logout() {
+                    store.clearCurrentUser();
+                    this.$router.push('/');
+                }
+            }
+        };
+
+        // 관리자 - 보상 관리 (NEW!)
+        const AdminRewards = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 관리자 페이지</div>
+                            <div class="navbar-nav">
+                                <router-link to="/admin" class="nav-link">대시보드</router-link>
+                                <router-link to="/admin/reviews" class="nav-link">감상문 관리</router-link>
+                                <router-link to="/admin/books" class="nav-link">도서 관리</router-link>
+                                <router-link to="/admin/rewards" class="nav-link active">보상 관리</router-link>
+                                <router-link to="/admin/stats" class="nav-link">통계</router-link>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <h2>보상 신청 관리 🎁</h2>
+                            <div v-if="requests.length > 0" class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>사용자</th>
+                                            <th>이메일</th>
+                                            <th>보상 내용</th>
+                                            <th>사용 포인트</th>
+                                            <th>신청일</th>
+                                            <th>상태</th>
+                                            <th>관리</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="request in requests" :key="request.id">
+                                            <td>{{ request.userName }}</td>
+                                            <td>{{ request.userEmail }}</td>
+                                            <td>{{ request.reward.name }}</td>
+                                            <td><strong>{{ request.pointsSpent }} P</strong></td>
+                                            <td>{{ request.date }}</td>
+                                            <td>
+                                                <span :class="['badge', 'badge-' + request.status]">
+                                                    {{ getStatusText(request.status) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div v-if="request.status === 'pending'" class="button-group">
+                                                    <button @click="approveRequest(request)" class="btn btn-sm btn-success">승인</button>
+                                                    <button @click="rejectRequest(request)" class="btn btn-sm btn-danger">보류</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else style="text-align: center; padding: 40px; color: #666;">
+                                <p>처리할 보상 신청이 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    requests: store.getRewardRequests()
+                };
+            },
+            methods: {
+                getStatusText(status) {
+                    const statusMap = {
+                        'pending': '처리 대기',
+                        'approved': '승인 완료',
+                        'rejected': '보류'
+                    };
+                    return statusMap[status] || status;
+                },
+                approveRequest(request) {
+                    if (confirm(`${request.userName}님의 보상 신청을 승인하시겠습니까?`)) {
+                        store.updateRewardRequest(request.id, { status: 'approved' });
+                        alert('보상 신청이 승인되었습니다.');
+                        this.requests = store.getRewardRequests();
+                    }
+                },
+                rejectRequest(request) {
+                    if (confirm(`${request.userName}님의 보상 신청을 보류하시겠습니까?\n\n포인트는 사용자에게 반환됩니다.`)) {
+                        // 포인트 반환
+                        store.addUserPoints(request.userEmail, request.pointsSpent);
+                        store.updateRewardRequest(request.id, { status: 'rejected' });
+                        alert('보상 신청이 보류되었으며, 포인트가 반환되었습니다.');
+                        this.requests = store.getRewardRequests();
                     }
                 },
                 logout() {
@@ -1930,6 +2204,7 @@
                                 <router-link to="/admin" class="nav-link">대시보드</router-link>
                                 <router-link to="/admin/reviews" class="nav-link">감상문 관리</router-link>
                                 <router-link to="/admin/books" class="nav-link active">도서 관리</router-link>
+                                <router-link to="/admin/rewards" class="nav-link">보상 관리</router-link>
                                 <router-link to="/admin/stats" class="nav-link">통계</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -2039,6 +2314,7 @@
                                 <router-link to="/admin" class="nav-link">대시보드</router-link>
                                 <router-link to="/admin/reviews" class="nav-link">감상문 관리</router-link>
                                 <router-link to="/admin/books" class="nav-link">도서 관리</router-link>
+                                <router-link to="/admin/rewards" class="nav-link">보상 관리</router-link>
                                 <router-link to="/admin/stats" class="nav-link active">통계</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -2145,6 +2421,7 @@
             { path: '/admin', component: AdminDashboard },
             { path: '/admin/reviews', component: AdminReviews },
             { path: '/admin/books', component: AdminBooks },
+            { path: '/admin/rewards', component: AdminRewards },
             { path: '/admin/stats', component: AdminStats }
         ];
 
