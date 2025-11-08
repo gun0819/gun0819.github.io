@@ -197,6 +197,7 @@
             padding: 8px 16px;
             border-radius: 8px;
             transition: background 0.3s;
+            position: relative;
         }
 
         .nav-link:hover {
@@ -206,6 +207,82 @@
         .nav-link.active {
             background: #667eea;
             color: white;
+        }
+
+        /* 드롭다운 메뉴 */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            z-index: 1000;
+            top: 100%;
+            left: 0;
+            margin-top: 5px;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background: #f0f0f0;
+        }
+
+        .dropdown-content a:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .dropdown-content a:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* 우측 상단 로그인 버튼 */
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .auth-btn {
+            padding: 6px 12px;
+            font-size: 14px;
+            color: #667eea;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .auth-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .auth-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .auth-btn.primary:hover {
+            background: #5568d3;
         }
 
         /* 대시보드 */
@@ -635,21 +712,28 @@
             opacity: 0.9;
         }
 
-        /* 인증번호 입력 */
-        .verification-code {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 20px 0;
+        /* 히어로 섹션 (홈페이지) */
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
         }
 
-        .verification-code input {
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            font-size: 24px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .hero .btn {
+            width: auto;
+            padding: 15px 40px;
+            font-size: 18px;
         }
     </style>
 </head>
@@ -668,7 +752,8 @@
             REVIEWS: 'reading_platform_reviews',
             USER_POINTS: 'reading_platform_points',
             QUIZ_RESULTS: 'reading_platform_quiz_results',
-            REWARD_REQUESTS: 'reading_platform_reward_requests'
+            REWARD_REQUESTS: 'reading_platform_reward_requests',
+            POINT_HISTORY: 'reading_platform_point_history'
         };
 
         // LocalStorage 유틸리티
@@ -716,6 +801,10 @@
             storage.set(STORAGE_KEYS.REWARD_REQUESTS, []);
         }
 
+        if (!storage.get(STORAGE_KEYS.POINT_HISTORY)) {
+            storage.set(STORAGE_KEYS.POINT_HISTORY, []);
+        }
+
         // Mock 데이터 저장소
         const store = {
             currentUser: storage.get(STORAGE_KEYS.CURRENT_USER),
@@ -745,7 +834,6 @@
                     users[index] = { ...users[index], ...updates };
                     storage.set(STORAGE_KEYS.USERS, users);
                     
-                    // 현재 로그인된 사용자 정보도 업데이트
                     if (this.currentUser && this.currentUser.id === userId) {
                         this.currentUser = { ...this.currentUser, ...updates };
                         storage.set(STORAGE_KEYS.CURRENT_USER, this.currentUser);
@@ -811,15 +899,42 @@
                 }
             },
             
+            getPointHistory() {
+                return storage.get(STORAGE_KEYS.POINT_HISTORY) || [];
+            },
+            
+            addPointHistory(history) {
+                const histories = this.getPointHistory();
+                histories.push(history);
+                storage.set(STORAGE_KEYS.POINT_HISTORY, histories);
+            },
+            
             getUserPoints(email) {
                 const points = storage.get(STORAGE_KEYS.USER_POINTS) || {};
                 return points[email] || 0;
             },
             
-            addUserPoints(email, amount) {
+            addUserPoints(email, amount, reason) {
                 const points = storage.get(STORAGE_KEYS.USER_POINTS) || {};
                 points[email] = (points[email] || 0) + amount;
                 storage.set(STORAGE_KEYS.USER_POINTS, points);
+                
+                // 포인트 이력 저장
+                const user = this.findUserByEmail(email);
+                if (user) {
+                    this.addPointHistory({
+                        id: Date.now(),
+                        userId: user.id,
+                        userName: user.name,
+                        userNickname: user.nickname,
+                        amount: amount,
+                        reason: reason,
+                        balance: points[email],
+                        date: new Date().toLocaleDateString(),
+                        time: new Date().toLocaleTimeString()
+                    });
+                }
+                
                 if (this.currentUser && this.currentUser.email === email) {
                     this.currentUser.points = points[email];
                 }
@@ -872,6 +987,113 @@
             ]
         };
 
+        // 홈페이지 (공개) 컴포넌트
+        const Home = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 독서 인증 플랫폼</div>
+                            <div class="auth-buttons">
+                                <router-link to="/login" class="auth-btn">로그인</router-link>
+                                <router-link to="/signup" class="auth-btn primary">회원가입</router-link>
+                            </div>
+                        </div>
+                    </nav>
+                    
+                    <div class="hero">
+                        <h1>📖 독서의 즐거움을 나누세요</h1>
+                        <p>책을 읽고, 감상을 나누고, 퀴즈를 풀며 포인트를 모으세요!</p>
+                        <button @click="$router.push('/books-public')" class="btn">도서 검색하기</button>
+                    </div>
+                    
+                    <div class="container">
+                        <div class="dashboard">
+                            <h2>서비스 소개</h2>
+                            <div class="card-grid">
+                                <div class="card">
+                                    <h3>📖 도서 검색</h3>
+                                    <p>QR 코드 스캔 또는 검색을 통해 다양한 책을 찾아보세요.</p>
+                                </div>
+                                <div class="card">
+                                    <h3>✍️ 감상문 작성</h3>
+                                    <p>읽은 책에 대한 감상을 글이나 음성으로 남겨보세요. 승인되면 포인트 획득!</p>
+                                </div>
+                                <div class="card">
+                                    <h3>🎯 독서 퀴즈</h3>
+                                    <p>책을 제대로 읽었는지 확인하는 퀴즈에 도전하고 포인트를 받으세요!</p>
+                                </div>
+                                <div class="card">
+                                    <h3>🎁 포인트 교환</h3>
+                                    <p>모은 포인트로 스타벅스 커피, 도서상품권 등 다양한 보상을 받으세요!</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // 공개 도서 검색 컴포넌트
+        const BooksPublic = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand" @click="$router.push('/')" style="cursor: pointer;">📚 독서 인증 플랫폼</div>
+                            <div class="auth-buttons">
+                                <router-link to="/login" class="auth-btn">로그인</router-link>
+                                <router-link to="/signup" class="auth-btn primary">회원가입</router-link>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <h2>도서 검색 📖</h2>
+                            
+                            <div class="alert-box warning">
+                                <strong>알림:</strong> 감상문 작성 및 퀴즈 풀이는 로그인 후 이용 가능합니다.
+                            </div>
+
+                            <div class="search-bar">
+                                <input v-model="searchQuery" placeholder="도서명, 저자, ISBN으로 검색..." @keyup.enter="searchBooks">
+                                <button @click="searchBooks">검색</button>
+                            </div>
+
+                            <div class="card-grid">
+                                <div v-for="book in filteredBooks" :key="book.id" class="card">
+                                    <h3>{{ book.title }}</h3>
+                                    <p><strong>저자:</strong> {{ book.author }}</p>
+                                    <p><strong>장르:</strong> {{ book.genre }}</p>
+                                    <p><strong>ISBN:</strong> {{ book.isbn }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    searchQuery: '',
+                    filteredBooks: store.getBooks()
+                };
+            },
+            methods: {
+                searchBooks() {
+                    const books = store.getBooks();
+                    if (!this.searchQuery) {
+                        this.filteredBooks = books;
+                        return;
+                    }
+                    this.filteredBooks = books.filter(book =>
+                        book.title.includes(this.searchQuery) ||
+                        book.author.includes(this.searchQuery) ||
+                        book.isbn.includes(this.searchQuery)
+                    );
+                }
+            }
+        };
+
         // 회원가입 컴포넌트
         const Signup = {
             template: `
@@ -922,7 +1144,7 @@
                             <button type="submit" class="btn" :disabled="!canSubmit">회원가입</button>
                         </form>
                         <div class="link-text">
-                            이미 계정이 있으신가요? <router-link to="/">로그인</router-link>
+                            이미 계정이 있으신가요? <router-link to="/login">로그인</router-link>
                         </div>
                     </div>
                 </div>
@@ -1006,7 +1228,7 @@
 
                     store.addUser(newUser);
                     alert('회원가입이 완료되었습니다! 로그인해주세요.');
-                    this.$router.push('/');
+                    this.$router.push('/login');
                 }
             }
         };
@@ -1117,11 +1339,11 @@
                                 <strong>찾은 아이디:</strong><br>
                                 {{ foundEmail }}
                             </div>
-                            <button @click="$router.push('/')" class="btn">로그인하기</button>
+                            <button @click="$router.push('/login')" class="btn">로그인하기</button>
                         </div>
                         
                         <div class="link-text">
-                            <router-link to="/">로그인으로 돌아가기</router-link>
+                            <router-link to="/login">로그인으로 돌아가기</router-link>
                         </div>
                     </div>
                 </div>
@@ -1212,7 +1434,7 @@
                         </div>
                         
                         <div class="link-text">
-                            <router-link to="/">로그인으로 돌아가기</router-link>
+                            <router-link to="/login">로그인으로 돌아가기</router-link>
                         </div>
                     </div>
                 </div>
@@ -1257,7 +1479,7 @@
                 resetPassword() {
                     store.updateUser(this.userId, { password: this.newPassword });
                     alert('비밀번호가 변경되었습니다. 로그인해주세요.');
-                    this.$router.push('/');
+                    this.$router.push('/login');
                 }
             }
         };
@@ -1274,8 +1496,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1293,7 +1521,7 @@
                                     <h3>{{ quizCount }}</h3>
                                     <p>완료한 퀴즈</p>
                                 </div>
-                                <div class="stat-card" @click="$router.push('/points')">
+                                <div class="stat-card" @click="$router.push('/points-exchange')">
                                     <h3>{{ user.points }}</h3>
                                     <p>보유 포인트</p>
                                 </div>
@@ -1335,7 +1563,7 @@
             }
         };
 
-        // 나의 페이지 컴포넌트 (NEW!)
+        // 나의 페이지 컴포넌트
         const MyPage = {
             template: `
                 <div>
@@ -1347,8 +1575,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link active">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1427,7 +1661,6 @@
             },
             methods: {
                 updateProfile() {
-                    // 닉네임 중복 체크
                     if (this.editForm.nickname !== this.user.nickname) {
                         const users = store.getUsers();
                         const exists = users.some(u => u.nickname === this.editForm.nickname && u.id !== this.user.id);
@@ -1477,8 +1710,8 @@
             }
         };
 
-        // 보상 신청 내역 컴포넌트 (NEW!)
-        const MyRewards = {
+        // 포인트 교환소 (기존 포인트 페이지)
+        const PointsExchange = {
             template: `
                 <div>
                     <nav class="navbar">
@@ -1489,8 +1722,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link active">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link active">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1498,9 +1737,179 @@
                     </nav>
                     <div class="container">
                         <div class="dashboard">
-                            <h2>보상 신청 내역 🎁</h2>
+                            <h2>포인트 교환소 💎</h2>
+                            <div class="point-display">{{ currentPoints }} P</div>
+                            
+                            <h3>보상 신청</h3>
+                            <div class="card-grid">
+                                <div v-for="reward in rewards" :key="reward.id" class="card">
+                                    <h3>{{ reward.name }}</h3>
+                                    <p>{{ reward.description }}</p>
+                                    <p style="font-size: 24px; color: #667eea; font-weight: bold;">{{ reward.points }} P</p>
+                                    <button @click="requestReward(reward)" 
+                                            :disabled="currentPoints < reward.points" 
+                                            class="btn btn-sm">
+                                        {{ currentPoints >= reward.points ? '신청하기' : '포인트 부족' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            data() {
+                return {
+                    currentPoints: store.getUserPoints(store.currentUser.email),
+                    rewards: [
+                        { id: 1, name: '스타벅스 아메리카노', description: '따뜻한 커피 한 잔', points: 100 },
+                        { id: 2, name: '교보문고 도서상품권', description: '5,000원 상품권', points: 200 },
+                        { id: 3, name: '영화 관람권', description: 'CGV 영화 관람권', points: 300 },
+                        { id: 4, name: '교보문고 도서상품권', description: '10,000원 상품권', points: 400 }
+                    ]
+                };
+            },
+            methods: {
+                requestReward(reward) {
+                    if (confirm(`${reward.name}을(를) ${reward.points} 포인트로 신청하시겠습니까?`)) {
+                        store.addUserPoints(store.currentUser.email, -reward.points, `보상 신청: ${reward.name}`);
+                        this.currentPoints = store.getUserPoints(store.currentUser.email);
+                        
+                        const request = {
+                            id: Date.now(),
+                            userId: store.currentUser.id,
+                            userName: store.currentUser.name,
+                            userNickname: store.currentUser.nickname,
+                            userEmail: store.currentUser.email,
+                            reward: reward,
+                            pointsSpent: reward.points,
+                            status: 'pending',
+                            date: new Date().toLocaleDateString()
+                        };
+                        
+                        store.addRewardRequest(request);
+                        alert('보상이 신청되었습니다! 관리자 확인 후 지급됩니다.');
+                        this.$router.push('/points-requests');
+                    }
+                },
+                logout() {
+                    store.clearCurrentUser();
+                    this.$router.push('/');
+                }
+            }
+        };
+
+        // 포인트 적립 내역 (NEW!)
+        const PointsHistory = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 독서 플랫폼</div>
+                            <div class="navbar-nav">
+                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+                                <router-link to="/books" class="nav-link">도서 검색</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link active">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
+                                <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <h2>포인트 적립 내역 📊</h2>
+                            <div class="point-display">현재 포인트: {{ currentPoints }} P</div>
+                            
+                            <div v-if="myHistory.length > 0" class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>날짜</th>
+                                            <th>시간</th>
+                                            <th>내용</th>
+                                            <th>포인트</th>
+                                            <th>잔액</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="history in myHistory" :key="history.id">
+                                            <td>{{ history.date }}</td>
+                                            <td>{{ history.time }}</td>
+                                            <td>{{ history.reason }}</td>
+                                            <td>
+                                                <strong :style="{color: history.amount > 0 ? '#28a745' : '#dc3545'}">
+                                                    {{ history.amount > 0 ? '+' : '' }}{{ history.amount }} P
+                                                </strong>
+                                            </td>
+                                            <td>{{ history.balance }} P</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div v-else style="text-align: center; padding: 40px; color: #666;">
+                                <p>아직 포인트 적립 내역이 없습니다.</p>
+                                <button @click="$router.push('/books')" class="btn btn-sm" style="margin-top: 20px;">포인트 모으러 가기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            computed: {
+                myHistory() {
+                    return store.getPointHistory()
+                        .filter(h => h.userId === store.currentUser.id)
+                        .sort((a, b) => b.id - a.id);
+                },
+                currentPoints() {
+                    return store.getUserPoints(store.currentUser.email);
+                }
+            },
+            methods: {
+                logout() {
+                    store.clearCurrentUser();
+                    this.$router.push('/');
+                }
+            }
+        };
+
+        // 포인트 신청 내역 (기존 보상 신청 내역)
+        const PointsRequests = {
+            template: `
+                <div>
+                    <nav class="navbar">
+                        <div class="container">
+                            <div class="navbar-brand">📚 독서 플랫폼</div>
+                            <div class="navbar-nav">
+                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+                                <router-link to="/books" class="nav-link">도서 검색</router-link>
+                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link active">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
+                                <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                            </div>
+                        </div>
+                    </nav>
+                    <div class="container">
+                        <div class="dashboard">
+                            <h2>포인트 신청 내역 🎁</h2>
                             <div style="margin-bottom: 20px;">
-                                <button @click="$router.push('/points')" class="btn btn-sm">+ 새로운 보상 신청하기</button>
+                                <button @click="$router.push('/points-exchange')" class="btn btn-sm">+ 새로운 보상 신청하기</button>
                             </div>
                             <div v-if="myRequests.length > 0" class="table-container">
                                 <table>
@@ -1528,7 +1937,7 @@
                             </div>
                             <div v-else style="text-align: center; padding: 40px; color: #666;">
                                 <p>아직 신청한 보상이 없습니다.</p>
-                                <button @click="$router.push('/points')" class="btn btn-sm" style="margin-top: 20px;">보상 신청하기</button>
+                                <button @click="$router.push('/points-exchange')" class="btn btn-sm" style="margin-top: 20px;">보상 신청하기</button>
                             </div>
                         </div>
                     </div>
@@ -1555,7 +1964,7 @@
             }
         };
 
-        // 도서 검색 컴포넌트
+        // 도서 검색 컴포넌트 (로그인 후)
         const BookSearch = {
             template: `
                 <div>
@@ -1567,8 +1976,14 @@
                                 <router-link to="/books" class="nav-link active">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1687,7 +2102,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -1962,7 +2384,7 @@
                     store.addQuizResult(quizResult);
                     
                     if (this.score >= 80) {
-                        store.addUserPoints(store.currentUser.email, 50);
+                        store.addUserPoints(store.currentUser.email, 50, `퀴즈 통과: ${this.book.title}`);
                     }
                 },
                 logout() {
@@ -1984,8 +2406,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link active">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -2080,8 +2508,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -2168,8 +2602,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link active">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -2247,8 +2687,14 @@
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link">포인트</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">내 포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">포인트 적립 내역</router-link>
+                                        <router-link to="/points-requests">포인트 신청 내역</router-link>
+                                    </div>
+                                </div>
                                 <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
@@ -2319,88 +2765,6 @@
                         return 'quiz-option incorrect';
                     }
                     return 'quiz-option';
-                },
-                logout() {
-                    store.clearCurrentUser();
-                    this.$router.push('/');
-                }
-            }
-        };
-
-        // 포인트 컴포넌트
-        const Points = {
-            template: `
-                <div>
-                    <nav class="navbar">
-                        <div class="container">
-                            <div class="navbar-brand">📚 독서 플랫폼</div>
-                            <div class="navbar-nav">
-                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
-                                <router-link to="/books" class="nav-link">도서 검색</router-link>
-                                <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
-                                <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
-                                <router-link to="/my-rewards" class="nav-link">보상 신청 내역</router-link>
-                                <router-link to="/points" class="nav-link active">포인트</router-link>
-                                <router-link to="/my-page" class="nav-link">나의 페이지</router-link>
-                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
-                            </div>
-                        </div>
-                    </nav>
-                    <div class="container">
-                        <div class="dashboard">
-                            <h2>포인트 현황 💎</h2>
-                            <div class="point-display">{{ currentPoints }} P</div>
-                            
-                            <h3>보상 신청</h3>
-                            <div class="card-grid">
-                                <div v-for="reward in rewards" :key="reward.id" class="card">
-                                    <h3>{{ reward.name }}</h3>
-                                    <p>{{ reward.description }}</p>
-                                    <p style="font-size: 24px; color: #667eea; font-weight: bold;">{{ reward.points }} P</p>
-                                    <button @click="requestReward(reward)" 
-                                            :disabled="currentPoints < reward.points" 
-                                            class="btn btn-sm">
-                                        {{ currentPoints >= reward.points ? '신청하기' : '포인트 부족' }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `,
-            data() {
-                return {
-                    currentPoints: store.getUserPoints(store.currentUser.email),
-                    rewards: [
-                        { id: 1, name: '스타벅스 아메리카노', description: '따뜻한 커피 한 잔', points: 100 },
-                        { id: 2, name: '교보문고 도서상품권', description: '5,000원 상품권', points: 200 },
-                        { id: 3, name: '영화 관람권', description: 'CGV 영화 관람권', points: 300 },
-                        { id: 4, name: '교보문고 도서상품권', description: '10,000원 상품권', points: 400 }
-                    ]
-                };
-            },
-            methods: {
-                requestReward(reward) {
-                    if (confirm(`${reward.name}을(를) ${reward.points} 포인트로 신청하시겠습니까?`)) {
-                        store.addUserPoints(store.currentUser.email, -reward.points);
-                        this.currentPoints = store.getUserPoints(store.currentUser.email);
-                        
-                        const request = {
-                            id: Date.now(),
-                            userId: store.currentUser.id,
-                            userName: store.currentUser.name,
-                            userNickname: store.currentUser.nickname,
-                            userEmail: store.currentUser.email,
-                            reward: reward,
-                            pointsSpent: reward.points,
-                            status: 'pending',
-                            date: new Date().toLocaleDateString()
-                        };
-                        
-                        store.addRewardRequest(request);
-                        alert('보상이 신청되었습니다! 관리자 확인 후 지급됩니다.');
-                        this.$router.push('/my-rewards');
-                    }
                 },
                 logout() {
                     store.clearCurrentUser();
@@ -2602,7 +2966,7 @@
                     store.updateReview(review.id, { status: 'approved' });
                     const user = store.getUsers().find(u => u.id === review.userId);
                     if (user) {
-                        store.addUserPoints(user.email, 100);
+                        store.addUserPoints(user.email, 100, `감상문 승인: ${review.book.title}`);
                     }
                     alert('감상문이 승인되었습니다. 사용자에게 100 포인트가 지급되었습니다.');
                     this.selectedReview = null;
@@ -2716,7 +3080,7 @@
                 },
                 rejectRequest(request) {
                     if (confirm(`${request.userNickname || request.userName}님의 보상 신청을 보류하시겠습니까?\n\n포인트는 사용자에게 반환됩니다.`)) {
-                        store.addUserPoints(request.userEmail, request.pointsSpent);
+                        store.addUserPoints(request.userEmail, request.pointsSpent, `보상 신청 보류: ${request.reward.name}`);
                         store.updateRewardRequest(request.id, { status: 'rejected' });
                         alert('보상 신청이 보류되었으며, 포인트가 반환되었습니다.');
                         this.requests = store.getRewardRequests();
@@ -2943,7 +3307,9 @@
 
         // 라우터 설정
         const routes = [
-            { path: '/', component: Login },
+            { path: '/', component: Home },
+            { path: '/books-public', component: BooksPublic },
+            { path: '/login', component: Login },
             { path: '/signup', component: Signup },
             { path: '/find-account', component: FindAccount },
             { path: '/find-password', component: FindPassword },
@@ -2955,8 +3321,9 @@
             { path: '/review-detail/:id', component: ReviewDetail },
             { path: '/completed-quizzes', component: CompletedQuizzes },
             { path: '/quiz-result/:id', component: QuizResultDetail },
-            { path: '/my-rewards', component: MyRewards },
-            { path: '/points', component: Points },
+            { path: '/points-exchange', component: PointsExchange },
+            { path: '/points-history', component: PointsHistory },
+            { path: '/points-requests', component: PointsRequests },
             { path: '/my-page', component: MyPage },
             { path: '/admin', component: AdminDashboard },
             { path: '/admin/reviews', component: AdminReviews },
@@ -2971,12 +3338,12 @@
         });
 
         router.beforeEach((to, from, next) => {
-            const publicPages = ['/', '/signup', '/find-account', '/find-password'];
+            const publicPages = ['/', '/books-public', '/login', '/signup', '/find-account', '/find-password'];
             const authRequired = !publicPages.includes(to.path);
             const loggedIn = store.currentUser;
 
             if (authRequired && !loggedIn) {
-                return next('/');
+                return next('/login');
             }
 
             if (to.path.startsWith('/admin') && loggedIn && loggedIn.type !== 'admin') {
