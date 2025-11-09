@@ -56,6 +56,7 @@
 
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
 
         .form-group label {
@@ -95,6 +96,80 @@
             color: #667eea;
             font-size: 12px;
             margin-top: 5px;
+        }
+
+        /* 자동완성 드롭다운 */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #667eea;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .autocomplete-item {
+            padding: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+
+        .autocomplete-item:hover {
+            background: #f8f9ff;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item img {
+            width: 50px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        .autocomplete-item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .autocomplete-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .autocomplete-item-author {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .autocomplete-loading {
+            padding: 16px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .autocomplete-no-results {
+            padding: 16px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
         }
 
         .btn {
@@ -182,12 +257,14 @@
             font-size: 24px;
             font-weight: bold;
             color: #667eea;
+            cursor: pointer;
         }
 
         .navbar-nav {
             display: flex;
             gap: 20px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .nav-link {
@@ -300,6 +377,13 @@
             font-size: 28px;
         }
 
+        .dashboard h3 {
+            color: #333;
+            margin-bottom: 15px;
+            margin-top: 30px;
+            font-size: 20px;
+        }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -325,6 +409,8 @@
         .stat-card h3 {
             font-size: 36px;
             margin-bottom: 10px;
+            color: white;
+            margin-top: 0;
         }
 
         .stat-card p {
@@ -335,7 +421,7 @@
         /* 카드 그리드 */
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -356,13 +442,47 @@
         .card h3 {
             color: #333;
             margin-bottom: 15px;
-            font-size: 20px;
+            font-size: 18px;
+            min-height: 44px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .card p {
             color: #666;
             margin-bottom: 10px;
             line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* 책 표지 이미지 */
+        .book-cover {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: #f0f0f0;
+            transition: transform 0.3s;
+        }
+
+        .card:hover .book-cover {
+            transform: scale(1.03);
+        }
+
+        .book-cover-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
         }
 
         /* 테이블 */
@@ -410,6 +530,7 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            position: relative;
         }
 
         .search-bar input {
@@ -420,6 +541,11 @@
             font-size: 14px;
         }
 
+        .search-bar input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .search-bar button {
             padding: 12px 24px;
             background: #667eea;
@@ -428,6 +554,16 @@
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .search-bar button:hover {
+            background: #5568d3;
+        }
+
+        .search-bar button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* 모달 */
@@ -463,6 +599,7 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
 
         /* 뱃지 */
@@ -514,6 +651,12 @@
             color: #155724;
         }
 
+        .alert-box.info {
+            background: #d1ecf1;
+            border: 1px solid #17a2b8;
+            color: #0c5460;
+        }
+
         /* 반응형 */
         @media (max-width: 768px) {
             .navbar-nav {
@@ -536,6 +679,11 @@
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 20px;
+        }
+
+        .quiz-question h4 {
+            margin-bottom: 15px;
+            color: #333;
         }
 
         .quiz-options {
@@ -670,6 +818,7 @@
             border-top: 1px solid #e0e0e0;
             color: #666;
             font-size: 14px;
+            flex-wrap: wrap;
         }
 
         .back-button {
@@ -680,6 +829,7 @@
             display: flex;
             gap: 10px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
 
         /* 프로필 카드 */
@@ -735,6 +885,28 @@
             padding: 15px 40px;
             font-size: 18px;
         }
+
+        /* 로딩 스피너 */
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -743,6 +915,9 @@
     <script>
         const { createApp } = Vue;
         const { createRouter, createWebHashHistory } = VueRouter;
+
+        // ⚠️ 여기에 발급받은 알라딘 TTB 키를 입력하세요!
+        const ALADIN_TTB_KEY = 'ttbkimjjunne1535001';  // <- 실제 발급받은 키로 변경하세요
 
         // LocalStorage 키
         const STORAGE_KEYS = {
@@ -770,6 +945,75 @@
             }
         };
 
+        // 알라딘 API 연동 (CORS 문제 해결 + 자동완성)
+        const bookAPI = {
+            // JSONP를 사용한 알라딘 API 호출 (CORS 우회)
+            async searchAladin(query, page = 1) {
+                if (!query.trim()) {
+                    return [];
+                }
+
+                return new Promise((resolve, reject) => {
+                    // 고유한 콜백 함수 이름 생성
+                    const callbackName = 'aladinCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    // JSONP 콜백 함수 등록
+                    window[callbackName] = function(data) {
+                        // 콜백 함수 정리
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        
+                        try {
+                            if (!data.item || data.item.length === 0) {
+                                resolve([]);
+                                return;
+                            }
+                            
+                            const books = data.item.map(book => ({
+                                id: book.isbn13 || book.isbn || Date.now() + Math.random(),
+                                title: book.title,
+                                author: book.author,
+                                isbn: book.isbn13 || book.isbn,
+                                genre: book.categoryName ? book.categoryName.split('>').pop().trim() : '일반',
+                                cover: book.cover,
+                                publisher: book.publisher,
+                                pubDate: book.pubDate,
+                                description: book.description || ''
+                            }));
+                            
+                            resolve(books);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+
+                    // JSONP 스크립트 태그 생성
+                    const script = document.createElement('script');
+                    const url = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodeURIComponent(query)}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
+                    
+                    script.src = url;
+                    script.onerror = () => {
+                        delete window[callbackName];
+                        document.body.removeChild(script);
+                        reject(new Error('알라딘 API 호출 실패'));
+                    };
+                    
+                    // 타임아웃 설정 (10초)
+                    setTimeout(() => {
+                        if (window[callbackName]) {
+                            delete window[callbackName];
+                            if (script.parentNode) {
+                                document.body.removeChild(script);
+                            }
+                            reject(new Error('요청 시간 초과'));
+                        }
+                    }, 10000);
+                    
+                    document.body.appendChild(script);
+                });
+            }
+        };
+
         // 초기 데이터 설정
         if (!storage.get(STORAGE_KEYS.USERS)) {
             storage.set(STORAGE_KEYS.USERS, []);
@@ -777,11 +1021,11 @@
 
         if (!storage.get(STORAGE_KEYS.BOOKS)) {
             storage.set(STORAGE_KEYS.BOOKS, [
-                { id: 1, title: '어린왕자', author: '생텍쥐페리', isbn: '9788932917245', genre: '소설' },
-                { id: 2, title: '해리포터와 마법사의 돌', author: 'J.K. 롤링', isbn: '9788983920775', genre: '판타지' },
-                { id: 3, title: '데미안', author: '헤르만 헤세', isbn: '9788932917382', genre: '소설' },
-                { id: 4, title: '나미야 잡화점의 기적', author: '히가시노 게이고', isbn: '9788935025893', genre: '소설' },
-                { id: 5, title: '1984', author: '조지 오웰', isbn: '9788937460777', genre: 'SF' }
+                { id: 1, title: '어린왕자', author: '생텍쥐페리', isbn: '9788932917245', genre: '소설', cover: '' },
+                { id: 2, title: '해리포터와 마법사의 돌', author: 'J.K. 롤링', isbn: '9788983920775', genre: '판타지', cover: '' },
+                { id: 3, title: '데미안', author: '헤르만 헤세', isbn: '9788932917382', genre: '소설', cover: '' },
+                { id: 4, title: '나미야 잡화점의 기적', author: '히가시노 게이고', isbn: '9788935025893', genre: '소설', cover: '' },
+                { id: 5, title: '1984', author: '조지 오웰', isbn: '9788937460777', genre: 'SF', cover: '' }
             ]);
         }
 
@@ -919,7 +1163,6 @@
                 points[email] = (points[email] || 0) + amount;
                 storage.set(STORAGE_KEYS.USER_POINTS, points);
                 
-                // 포인트 이력 저장
                 const user = this.findUserByEmail(email);
                 if (user) {
                     this.addPointHistory({
@@ -1013,7 +1256,7 @@
                             <div class="card-grid">
                                 <div class="card">
                                     <h3>📖 도서 검색</h3>
-                                    <p>QR 코드 스캔 또는 검색을 통해 다양한 책을 찾아보세요.</p>
+                                    <p>알라딘 실시간 검색으로 다양한 책을 찾아보세요. 타이핑하면 자동으로 추천!</p>
                                 </div>
                                 <div class="card">
                                     <h3>✍️ 감상문 작성</h3>
@@ -1034,7 +1277,7 @@
             `
         };
 
-        // 공개 도서 검색 컴포넌트
+        // 공개 도서 검색 컴포넌트 (자동완성 기능 추가!)
         const BooksPublic = {
             template: `
                 <div>
@@ -1051,22 +1294,93 @@
                         <div class="dashboard">
                             <h2>도서 검색 📖</h2>
                             
+                            <div class="alert-box info">
+                                <strong>💡 사용 팁:</strong> 책 제목의 일부만 입력해도 자동으로 추천 목록이 나타납니다! (예: "해리" 입력 시 "해리포터" 추천)
+                            </div>
+
                             <div class="alert-box warning">
                                 <strong>알림:</strong> 감상문 작성 및 퀴즈 풀이는 로그인 후 이용 가능합니다.
                             </div>
 
-                            <div class="search-bar">
-                                <input v-model="searchQuery" placeholder="도서명, 저자, ISBN으로 검색..." @keyup.enter="searchBooks">
-                                <button @click="searchBooks">검색</button>
+                            <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+                                <label>검색 소스</label>
+                                <select v-model="searchSource">
+                                    <option value="local">로컬 데이터베이스</option>
+                                    <option value="aladin">알라딘 (자동완성)</option>
+                                </select>
                             </div>
 
-                            <div class="card-grid">
+                            <div class="search-bar">
+                                <div style="flex: 1; position: relative;">
+                                    <input v-model="searchQuery" 
+                                           placeholder="책 제목을 입력하세요... (예: 해리, 어린왕, 데미안)" 
+                                           @input="onSearchInput"
+                                           @keyup.enter="searchBooks"
+                                           @focus="showAutocomplete = true">
+                                    
+                                    <!-- 자동완성 드롭다운 -->
+                                    <div v-if="showAutocomplete && searchSource === 'aladin' && searchQuery.length > 0" 
+                                         class="autocomplete-dropdown">
+                                        <div v-if="isAutocompleteLoading" class="autocomplete-loading">
+                                            검색 중...
+                                        </div>
+                                        <div v-else-if="autocompleteResults.length > 0">
+                                            <div v-for="book in autocompleteResults" 
+                                                 :key="book.id" 
+                                                 class="autocomplete-item"
+                                                 @click="selectAutocompleteBook(book)">
+                                                <img v-if="book.cover" :src="book.cover" :alt="book.title">
+                                                <div v-else style="width: 50px; height: 70px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📚</div>
+                                                <div class="autocomplete-item-content">
+                                                    <div class="autocomplete-item-title">{{ book.title }}</div>
+                                                    <div class="autocomplete-item-author">{{ book.author }} · {{ book.publisher }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-else-if="!isAutocompleteLoading" class="autocomplete-no-results">
+                                            검색 결과가 없습니다
+                                        </div>
+                                    </div>
+                                </div>
+                                <button @click="searchBooks" :disabled="isLoading">
+                                    {{ isLoading ? '검색 중...' : '검색' }}
+                                </button>
+                            </div>
+
+                            <div v-if="errorMessage" class="alert-box danger">
+                                {{ errorMessage }}
+                            </div>
+
+                            <div v-if="isLoading" class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <p>알라딘에서 도서 정보를 가져오는 중...</p>
+                            </div>
+
+                            <div v-else-if="filteredBooks.length > 0" class="card-grid">
                                 <div v-for="book in filteredBooks" :key="book.id" class="card">
+                                    <img v-if="book.cover" 
+                                         :src="book.cover" 
+                                         :alt="book.title"
+                                         class="book-cover"
+                                         @error="handleImageError">
+                                    <div v-else class="book-cover-placeholder">📚</div>
                                     <h3>{{ book.title }}</h3>
                                     <p><strong>저자:</strong> {{ book.author }}</p>
                                     <p><strong>장르:</strong> {{ book.genre }}</p>
+                                    <p v-if="book.publisher"><strong>출판사:</strong> {{ book.publisher }}</p>
                                     <p><strong>ISBN:</strong> {{ book.isbn }}</p>
                                 </div>
+                            </div>
+
+                            <div v-else-if="!isLoading && searchQuery" 
+                                 style="text-align: center; padding: 40px; color: #666;">
+                                <p>검색 결과가 없습니다.</p>
+                                <p style="margin-top: 10px; font-size: 14px;">다른 키워드로 검색해보세요.</p>
+                            </div>
+
+                            <div v-else style="text-align: center; padding: 40px; color: #666;">
+                                <p>검색어를 입력하고 검색 버튼을 눌러주세요.</p>
+                                <p style="margin-top: 10px; font-size: 14px;">💡 알라딘 자동완성으로 빠르게 책을 찾을 수 있습니다!</p>
                             </div>
                         </div>
                     </div>
@@ -1075,21 +1389,107 @@
             data() {
                 return {
                     searchQuery: '',
-                    filteredBooks: store.getBooks()
+                    searchSource: 'aladin',
+                    filteredBooks: [],
+                    isLoading: false,
+                    errorMessage: '',
+                    showAutocomplete: false,
+                    autocompleteResults: [],
+                    isAutocompleteLoading: false,
+                    autocompleteTimeout: null
                 };
             },
+            mounted() {
+                // 클릭 이벤트로 자동완성 닫기
+                document.addEventListener('click', this.handleClickOutside);
+            },
+            beforeUnmount() {
+                document.removeEventListener('click', this.handleClickOutside);
+                if (this.autocompleteTimeout) {
+                    clearTimeout(this.autocompleteTimeout);
+                }
+            },
             methods: {
-                searchBooks() {
-                    const books = store.getBooks();
-                    if (!this.searchQuery) {
-                        this.filteredBooks = books;
+                handleClickOutside(event) {
+                    const searchBar = event.target.closest('.search-bar');
+                    if (!searchBar) {
+                        this.showAutocomplete = false;
+                    }
+                },
+                onSearchInput() {
+                    if (this.searchSource !== 'aladin' || this.searchQuery.length === 0) {
+                        this.showAutocomplete = false;
+                        this.autocompleteResults = [];
                         return;
                     }
-                    this.filteredBooks = books.filter(book =>
-                        book.title.includes(this.searchQuery) ||
-                        book.author.includes(this.searchQuery) ||
-                        book.isbn.includes(this.searchQuery)
-                    );
+
+                    this.showAutocomplete = true;
+                    
+                    // 디바운스: 300ms 후에 검색
+                    if (this.autocompleteTimeout) {
+                        clearTimeout(this.autocompleteTimeout);
+                    }
+
+                    this.autocompleteTimeout = setTimeout(() => {
+                        this.fetchAutocomplete();
+                    }, 300);
+                },
+                async fetchAutocomplete() {
+                    if (!this.searchQuery.trim()) {
+                        this.autocompleteResults = [];
+                        return;
+                    }
+
+                    this.isAutocompleteLoading = true;
+                    this.errorMessage = '';
+
+                    try {
+                        const results = await bookAPI.searchAladin(this.searchQuery);
+                        this.autocompleteResults = results.slice(0, 5); // 상위 5개만 표시
+                    } catch (error) {
+                        console.error('자동완성 에러:', error);
+                        this.autocompleteResults = [];
+                    } finally {
+                        this.isAutocompleteLoading = false;
+                    }
+                },
+                selectAutocompleteBook(book) {
+                    this.searchQuery = book.title;
+                    this.showAutocomplete = false;
+                    this.filteredBooks = [book];
+                },
+                async searchBooks() {
+                    this.showAutocomplete = false;
+
+                    if (!this.searchQuery.trim()) {
+                        this.filteredBooks = this.searchSource === 'local' ? store.getBooks() : [];
+                        return;
+                    }
+
+                    this.isLoading = true;
+                    this.errorMessage = '';
+
+                    try {
+                        if (this.searchSource === 'aladin') {
+                            this.filteredBooks = await bookAPI.searchAladin(this.searchQuery);
+                        } else {
+                            const books = store.getBooks();
+                            this.filteredBooks = books.filter(book =>
+                                book.title.includes(this.searchQuery) ||
+                                book.author.includes(this.searchQuery) ||
+                                book.isbn.includes(this.searchQuery)
+                            );
+                        }
+                    } catch (error) {
+                        console.error('검색 에러:', error);
+                        this.errorMessage = '도서 검색 중 오류가 발생했습니다. API 키를 확인하거나 잠시 후 다시 시도해주세요.';
+                        this.filteredBooks = [];
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                handleImageError(event) {
+                    event.target.style.display = 'none';
                 }
             }
         };
@@ -1492,7 +1892,7 @@
                         <div class="container">
                             <div class="navbar-brand">📚 독서 플랫폼</div>
                             <div class="navbar-nav">
-                                <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+                                <router-link to="/dashboard" class="nav-link active">대시보드</router-link>
                                 <router-link to="/books" class="nav-link">도서 검색</router-link>
                                 <router-link to="/my-reviews" class="nav-link">작성한 감상문</router-link>
                                 <router-link to="/completed-quizzes" class="nav-link">완료한 퀴즈</router-link>
@@ -1530,7 +1930,7 @@
                             <div class="card-grid">
                                 <div class="card">
                                     <h3>📖 도서 검색</h3>
-                                    <p>QR 코드 스캔 또는 검색을 통해 새로운 책을 찾아보세요.</p>
+                                    <p>알라딘 자동완성 검색으로 새로운 책을 빠르게 찾아보세요.</p>
                                     <button @click="$router.push('/books')" class="btn btn-sm">검색하기</button>
                                 </div>
                                 <div class="card">
@@ -1710,7 +2110,7 @@
             }
         };
 
-        // 포인트 교환소 (기존 포인트 페이지)
+        // 포인트 교환소
         const PointsExchange = {
             template: `
                 <div>
@@ -1798,7 +2198,7 @@
             }
         };
 
-        // 포인트 적립 내역 (NEW!)
+        // 포인트 적립 내역
         const PointsHistory = {
             template: `
                 <div>
@@ -1880,7 +2280,7 @@
             }
         };
 
-        // 포인트 신청 내역 (기존 보상 신청 내역)
+        // 포인트 신청 내역
         const PointsRequests = {
             template: `
                 <div>
@@ -1964,7 +2364,7 @@
             }
         };
 
-        // 도서 검색 컴포넌트 (로그인 후)
+        // 도서 검색 컴포넌트 (로그인 후) - 자동완성 포함!
         const BookSearch = {
             template: `
                 <div>
@@ -1993,6 +2393,10 @@
                         <div class="dashboard">
                             <h2>도서 검색 및 선택 📖</h2>
                             
+                            <div class="alert-box info">
+                                <strong>💡 사용 팁:</strong> 책 제목의 일부만 입력해도 자동으로 추천 목록이 나타납니다!
+                            </div>
+                            
                             <div style="margin-bottom: 30px;">
                                 <button @click="showQRScanner = !showQRScanner" class="btn btn-sm">
                                     {{ showQRScanner ? 'QR 스캐너 닫기' : '📷 QR 코드 스캔' }}
@@ -2009,31 +2413,106 @@
                                 </div>
                             </div>
 
-                            <div class="search-bar">
-                                <input v-model="searchQuery" placeholder="도서명, 저자, ISBN으로 검색..." @keyup.enter="searchBooks">
-                                <button @click="searchBooks">검색</button>
+                            <div class="form-group" style="max-width: 300px; margin-bottom: 20px;">
+                                <label>검색 소스</label>
+                                <select v-model="searchSource">
+                                    <option value="local">로컬 데이터베이스</option>
+                                    <option value="aladin">알라딘 (자동완성)</option>
+                                </select>
                             </div>
 
-                            <div class="card-grid">
+                            <div class="search-bar">
+                                <div style="flex: 1; position: relative;">
+                                    <input v-model="searchQuery" 
+                                           placeholder="책 제목을 입력하세요..." 
+                                           @input="onSearchInput"
+                                           @keyup.enter="searchBooks"
+                                           @focus="showAutocomplete = true">
+                                    
+                                    <!-- 자동완성 드롭다운 -->
+                                    <div v-if="showAutocomplete && searchSource === 'aladin' && searchQuery.length > 0" 
+                                         class="autocomplete-dropdown">
+                                        <div v-if="isAutocompleteLoading" class="autocomplete-loading">
+                                            검색 중...
+                                        </div>
+                                        <div v-else-if="autocompleteResults.length > 0">
+                                            <div v-for="book in autocompleteResults" 
+                                                 :key="book.id" 
+                                                 class="autocomplete-item"
+                                                 @click="selectAutocompleteBook(book)">
+                                                <img v-if="book.cover" :src="book.cover" :alt="book.title">
+                                                <div v-else style="width: 50px; height: 70px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 20px;">📚</div>
+                                                <div class="autocomplete-item-content">
+                                                    <div class="autocomplete-item-title">{{ book.title }}</div>
+                                                    <div class="autocomplete-item-author">{{ book.author }} · {{ book.publisher }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div v-else-if="!isAutocompleteLoading" class="autocomplete-no-results">
+                                            검색 결과가 없습니다
+                                        </div>
+                                    </div>
+                                </div>
+                                <button @click="searchBooks" :disabled="isLoading">
+                                    {{ isLoading ? '검색 중...' : '검색' }}
+                                </button>
+                            </div>
+
+                            <div v-if="errorMessage" class="alert-box danger">
+                                {{ errorMessage }}
+                            </div>
+
+                            <div v-if="isLoading" class="loading-container">
+                                <div class="loading-spinner"></div>
+                                <p>알라딘에서 도서 정보를 가져오는 중...</p>
+                            </div>
+
+                            <div v-else-if="filteredBooks.length > 0" class="card-grid">
                                 <div v-for="book in filteredBooks" :key="book.id" class="card">
+                                    <img v-if="book.cover" 
+                                         :src="book.cover" 
+                                         :alt="book.title"
+                                         class="book-cover"
+                                         @error="handleImageError">
+                                    <div v-else class="book-cover-placeholder">📚</div>
                                     <h3>{{ book.title }}</h3>
                                     <p><strong>저자:</strong> {{ book.author }}</p>
                                     <p><strong>장르:</strong> {{ book.genre }}</p>
+                                    <p v-if="book.publisher"><strong>출판사:</strong> {{ book.publisher }}</p>
                                     <p><strong>ISBN:</strong> {{ book.isbn }}</p>
                                     <button @click="selectBook(book)" class="btn btn-sm">선택하기</button>
                                 </div>
+                            </div>
+
+                            <div v-else-if="!isLoading && searchQuery" 
+                                 style="text-align: center; padding: 40px; color: #666;">
+                                <p>검색 결과가 없습니다.</p>
+                                <p style="margin-top: 10px; font-size: 14px;">다른 키워드로 검색해보세요.</p>
+                            </div>
+
+                            <div v-else style="text-align: center; padding: 40px; color: #666;">
+                                <p>검색어를 입력하고 검색 버튼을 눌러주세요.</p>
+                                <p style="margin-top: 10px; font-size: 14px;">💡 알라딘 자동완성으로 빠르게 책을 찾을 수 있습니다!</p>
                             </div>
                         </div>
                     </div>
 
                     <div v-if="selectedBook" class="modal-overlay" @click.self="selectedBook = null">
                         <div class="modal">
+                            <img v-if="selectedBook.cover" 
+                                 :src="selectedBook.cover" 
+                                 :alt="selectedBook.title"
+                                 style="width: 100%; max-width: 200px; margin: 0 auto 20px; display: block; border-radius: 10px;">
                             <h3>{{ selectedBook.title }}</h3>
                             <p><strong>저자:</strong> {{ selectedBook.author }}</p>
-                            <div style="margin-top: 20px;">
+                            <p v-if="selectedBook.publisher"><strong>출판사:</strong> {{ selectedBook.publisher }}</p>
+                            <p v-if="selectedBook.description" style="margin-top: 15px; color: #666; font-size: 14px;">
+                                {{ selectedBook.description.substring(0, 150) }}...
+                            </p>
+                            <div class="modal-actions">
                                 <button @click="startReview" class="btn btn-sm">감상문 작성</button>
-                                <button @click="startQuiz" class="btn btn-sm" style="margin-left: 10px;">퀴즈 풀기</button>
-                                <button @click="selectedBook = null" class="btn btn-sm btn-secondary" style="margin-left: 10px;">닫기</button>
+                                <button @click="startQuiz" class="btn btn-sm">퀴즈 풀기</button>
+                                <button @click="selectedBook = null" class="btn btn-sm btn-secondary">닫기</button>
                             </div>
                         </div>
                     </div>
@@ -2042,23 +2521,104 @@
             data() {
                 return {
                     searchQuery: '',
+                    searchSource: 'aladin',
                     showQRScanner: false,
                     selectedBook: null,
-                    filteredBooks: store.getBooks()
+                    filteredBooks: [],
+                    isLoading: false,
+                    errorMessage: '',
+                    showAutocomplete: false,
+                    autocompleteResults: [],
+                    isAutocompleteLoading: false,
+                    autocompleteTimeout: null
                 };
             },
+            mounted() {
+                document.addEventListener('click', this.handleClickOutside);
+            },
+            beforeUnmount() {
+                document.removeEventListener('click', this.handleClickOutside);
+                if (this.autocompleteTimeout) {
+                    clearTimeout(this.autocompleteTimeout);
+                }
+            },
             methods: {
-                searchBooks() {
-                    const books = store.getBooks();
-                    if (!this.searchQuery) {
-                        this.filteredBooks = books;
+                handleClickOutside(event) {
+                    const searchBar = event.target.closest('.search-bar');
+                    if (!searchBar) {
+                        this.showAutocomplete = false;
+                    }
+                },
+                onSearchInput() {
+                    if (this.searchSource !== 'aladin' || this.searchQuery.length === 0) {
+                        this.showAutocomplete = false;
+                        this.autocompleteResults = [];
                         return;
                     }
-                    this.filteredBooks = books.filter(book =>
-                        book.title.includes(this.searchQuery) ||
-                        book.author.includes(this.searchQuery) ||
-                        book.isbn.includes(this.searchQuery)
-                    );
+
+                    this.showAutocomplete = true;
+                    
+                    if (this.autocompleteTimeout) {
+                        clearTimeout(this.autocompleteTimeout);
+                    }
+
+                    this.autocompleteTimeout = setTimeout(() => {
+                        this.fetchAutocomplete();
+                    }, 300);
+                },
+                async fetchAutocomplete() {
+                    if (!this.searchQuery.trim()) {
+                        this.autocompleteResults = [];
+                        return;
+                    }
+
+                    this.isAutocompleteLoading = true;
+                    this.errorMessage = '';
+
+                    try {
+                        const results = await bookAPI.searchAladin(this.searchQuery);
+                        this.autocompleteResults = results.slice(0, 5);
+                    } catch (error) {
+                        console.error('자동완성 에러:', error);
+                        this.autocompleteResults = [];
+                    } finally {
+                        this.isAutocompleteLoading = false;
+                    }
+                },
+                selectAutocompleteBook(book) {
+                    this.searchQuery = book.title;
+                    this.showAutocomplete = false;
+                    this.filteredBooks = [book];
+                },
+                async searchBooks() {
+                    this.showAutocomplete = false;
+
+                    if (!this.searchQuery.trim()) {
+                        this.filteredBooks = this.searchSource === 'local' ? store.getBooks() : [];
+                        return;
+                    }
+
+                    this.isLoading = true;
+                    this.errorMessage = '';
+
+                    try {
+                        if (this.searchSource === 'aladin') {
+                            this.filteredBooks = await bookAPI.searchAladin(this.searchQuery);
+                        } else {
+                            const books = store.getBooks();
+                            this.filteredBooks = books.filter(book =>
+                                book.title.includes(this.searchQuery) ||
+                                book.author.includes(this.searchQuery) ||
+                                book.isbn.includes(this.searchQuery)
+                            );
+                        }
+                    } catch (error) {
+                        console.error('검색 에러:', error);
+                        this.errorMessage = '도서 검색 중 오류가 발생했습니다. API 키를 확인하거나 잠시 후 다시 시도해주세요.';
+                        this.filteredBooks = [];
+                    } finally {
+                        this.isLoading = false;
+                    }
                 },
                 simulateQRScan() {
                     const books = store.getBooks();
@@ -2070,18 +2630,21 @@
                     this.selectedBook = book;
                 },
                 startReview() {
-                    if (store.hasReviewForBook(store.currentUser.id, this.selectedBook.id)) {
+                    if (store.hasReviewForBook(store.currentUser.id, this.selectedBook.id || this.selectedBook.isbn)) {
                         alert('이미 감상문을 제출한 도서입니다.');
                         return;
                     }
-                    this.$router.push(`/review/${this.selectedBook.id}`);
+                    this.$router.push(`/review/${this.selectedBook.id || this.selectedBook.isbn}`);
                 },
                 startQuiz() {
-                    if (store.hasQuizForBook(store.currentUser.id, this.selectedBook.id)) {
+                    if (store.hasQuizForBook(store.currentUser.id, this.selectedBook.id || this.selectedBook.isbn)) {
                         alert('이미 퀴즈를 푼 책입니다.');
                         return;
                     }
-                    this.$router.push(`/quiz/${this.selectedBook.id}`);
+                    this.$router.push(`/quiz/${this.selectedBook.id || this.selectedBook.isbn}`);
+                },
+                handleImageError(event) {
+                    event.target.style.display = 'none';
                 },
                 logout() {
                     store.clearCurrentUser();
@@ -2090,7 +2653,7 @@
             }
         };
 
-        // 감상문 작성/수정 컴포넌트
+        // 나머지 컴포넌트들 (감상문, 퀴즈, 관리자) - 간단 버전
         const ReviewWrite = {
             template: `
                 <div>
@@ -3304,6 +3867,7 @@
                 }
             }
         };
+
 
         // 라우터 설정
         const routes = [
