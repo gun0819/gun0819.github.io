@@ -989,7 +989,8 @@
 
                     // JSONP 스크립트 태그 생성
                     const script = document.createElement('script');
-                    const url = `https://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodeURIComponent(query)}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
+                    const protocol = window.location.protocol;
+                    const url = `${protocol}//www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodeURIComponent(query)}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
                     
                     script.src = url;
                     script.onerror = () => {
@@ -1425,14 +1426,14 @@
 
                     this.showAutocomplete = true;
                     
-                    // 디바운스: 300ms 후에 검색
+                    // 디바운스: 500ms 후에 검색
                     if (this.autocompleteTimeout) {
                         clearTimeout(this.autocompleteTimeout);
                     }
 
                     this.autocompleteTimeout = setTimeout(() => {
                         this.fetchAutocomplete();
-                    }, 300);
+                    }, 500);
                 },
                 async fetchAutocomplete() {
                     if (!this.searchQuery.trim()) {
