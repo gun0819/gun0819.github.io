@@ -959,12 +959,26 @@
                     
                     // JSONP 콜백 함수 등록
                     window[callbackName] = function(data) {
+                        console.log('✅ 알라딘 API 응답:', data);
                         // 콜백 함수 정리
                         delete window[callbackName];
                         document.body.removeChild(script);
                         
                         try {
+                            if (!data) {
+                                console.error('❌ 데이터가 없습니다');
+                                resolve([]);
+                                return;
+                            }
+        
+                            if (data.errorCode) {
+                                console.error('❌ API 오류:', data.errorCode, data.errorMessage);
+                                reject(new Error(`알라딘 API 오류: ${data.errorMessage || data.errorCode}`));
+                                return;
+                            }
+                            
                             if (!data.item || data.item.length === 0) {
+                                console.log('⚠️ 검색 결과 없음');
                                 resolve([]);
                                 return;
                             }
@@ -981,32 +995,40 @@
                                 description: book.description || ''
                             }));
                             
+                            console.log(`✅ ${books.length}개의 책을 찾았습니다`);
                             resolve(books);
                         } catch (error) {
+                            console.error('❌ 데이터 파싱 오류:', error);
                             reject(error);
                         }
                     };
 
-                    // JSONP 스크립트 태그 생성
-                    const script = document.createElement('script');
-                    const protocol = window.location.protocol;
-                    const url = `${protocol}//www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodeURIComponent(query)}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
+                    // HTTP/HTTPS 프로토콜 자동 감지
+                    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+                    
+                    // URL 인코딩 확인
+                    const encodedQuery = encodeURIComponent(query);
+                    const url = `${protocol}//www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodedQuery}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
+
+                    console.log('📡 API 요청 URL:', url);
                     
                     script.src = url;
-                    script.onerror = () => {
+                    script.onerror = (error) => {
+                        console.error('❌ 스크립트 로드 실패:', error);
                         delete window[callbackName];
                         document.body.removeChild(script);
-                        reject(new Error('알라딘 API 호출 실패'));
+                        reject(new Error('알라딘 API 호출 실패 - 네트워크 오류'));
                     };
                     
                     // 타임아웃 설정 (10초)
                     setTimeout(() => {
                         if (window[callbackName]) {
+                            console.error('❌ 요청 시간 초과');
                             delete window[callbackName];
                             if (script.parentNode) {
                                 document.body.removeChild(script);
                             }
-                            reject(new Error('요청 시간 초과'));
+                            reject(new Error('요청 시간 초과 (10초)'));
                         }
                     }, 10000);
                     
