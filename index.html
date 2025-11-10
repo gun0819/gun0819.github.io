@@ -952,7 +952,9 @@
                 if (!query.trim()) {
                     return [];
                 }
-
+                
+                console.log('🔍 알라딘 검색 시작:', query);
+                
                 return new Promise((resolve, reject) => {
                     // 고유한 콜백 함수 이름 생성
                     const callbackName = 'aladinCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -1008,12 +1010,9 @@
 
                     script = document.createElement('script');
                     
-                    // HTTP/HTTPS 프로토콜 자동 감지
-                    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-                    
                     // URL 인코딩 확인
                     const encodedQuery = encodeURIComponent(query);
-                    const url = `${protocol}//www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodedQuery}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
+                    const url = `http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_TTB_KEY}&Query=${encodedQuery}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&callback=${callbackName}`;
 
                     console.log('📡 API 요청 URL:', url);
                     
