@@ -998,47 +998,68 @@
             }
         };
 
-        // 초기 데이터 설정
-        if (!storage.get(STORAGE_KEYS.USERS)) {
-            const testUsers = [
-                {
-                    id: 1001,
-                    name: '김독서',
-                    nickname: '리담',
-                    email: 'user@test.com',
-                    phone: '010-1234-5678',
-                    password: 'user1234',
-                    type: 'user',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 1002,
-                    name: '김독서2',
-                    nickname: '도담',
-                    email: 'user2@test.com',
-                    phone: '010-2345-6789',
-                    password: 'user1234',
-                    type: 'user',
-                    createdAt: new Date().toISOString()
-                },
-                {
-                    id: 9001,
-                    name: '관리자',
-                    nickname: '도서관리자',
-                    email: 'admin@test.com',
-                    phone: '010-9999-9999',
-                    password: 'admin1234',
-                    type: 'admin',
-                    createdAt: new Date().toISOString()
-                }
-            ];
+        // 초기 데이터 설정 - 개선 버전
+        (function initializeData() {
+            const users = storage.get(STORAGE_KEYS.USERS);
             
-            storage.set(STORAGE_KEYS.USERS, testUsers);
+            // 사용자가 없거나 테스트 계정이 없으면 생성
+            const hasTestUsers = users && users.some(u => u.email === 'user@test.com');
             
-            console.log('✅ 테스트 계정이 생성되었습니다!');
-            console.log('📌 일반 사용자 1: user@test.com / user1234');
-            console.log('📌 관리자: admin@test.com / admin1234');
-        }
+            if (!hasTestUsers) {
+                console.log('🔄 테스트 계정을 생성합니다...');
+                
+                const testUsers = [
+                    {
+                        id: 1001,
+                        name: '김독서',
+                        nickname: '리담',
+                        email: 'user@test.com',
+                        phone: '010-1234-5678',
+                        password: 'user1234',
+                        type: 'user',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 1002,
+                        name: '김독서2',
+                        nickname: '도담',
+                        email: 'user2@test.com',
+                        phone: '010-2345-6789',
+                        password: 'user1234',
+                        type: 'user',
+                        createdAt: new Date().toISOString()
+                    },
+                    {
+                        id: 9001,
+                        name: '관리자',
+                        nickname: '도서관리자',
+                        email: 'admin@test.com',
+                        phone: '010-9999-9999',
+                        password: 'admin1234',
+                        type: 'admin',
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                
+                storage.set(STORAGE_KEYS.USERS, testUsers);
+                
+                // 테스트 사용자들의 초기 포인트 설정
+                const initialPoints = {
+                    'user@test.com': 150,
+                    'user2@test.com': 250,
+                    'admin@test.com': 0
+                };
+                storage.set(STORAGE_KEYS.USER_POINTS, initialPoints);
+                
+                console.log('✅ 테스트 계정이 생성되었습니다!');
+                console.log('📌 일반 사용자 1: user@test.com / user1234');
+                console.log('📌 일반 사용자 2: user2@test.com / user1234');
+                console.log('📌 관리자: admin@test.com / admin1234');
+            } else {
+                console.log('✅ 기존 테스트 계정을 사용합니다.');
+            }
+        })();
+
         
         if (!storage.get(STORAGE_KEYS.BOOKS)) {
             storage.set(STORAGE_KEYS.BOOKS, [
