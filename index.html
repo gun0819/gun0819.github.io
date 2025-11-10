@@ -956,13 +956,16 @@
                 return new Promise((resolve, reject) => {
                     // 고유한 콜백 함수 이름 생성
                     const callbackName = 'aladinCallback_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                    
+                    let script;
                     // JSONP 콜백 함수 등록
                     window[callbackName] = function(data) {
                         console.log('✅ 알라딘 API 응답:', data);
                         // 콜백 함수 정리
                         delete window[callbackName];
-                        document.body.removeChild(script);
+                        
+                        if (script && script.parentNode) {
+                            document.body.removeChild(script);
+                        }    
                         
                         try {
                             if (!data) {
@@ -1003,6 +1006,8 @@
                         }
                     };
 
+                    script = document.createElement('script');
+                    
                     // HTTP/HTTPS 프로토콜 자동 감지
                     const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
                     
@@ -1016,7 +1021,9 @@
                     script.onerror = (error) => {
                         console.error('❌ 스크립트 로드 실패:', error);
                         delete window[callbackName];
-                        document.body.removeChild(script);
+                        if (script && script.parentNode) {
+                            document.body.removeChild(script);
+                        }
                         reject(new Error('알라딘 API 호출 실패 - 네트워크 오류'));
                     };
                     
@@ -1025,7 +1032,7 @@
                         if (window[callbackName]) {
                             console.error('❌ 요청 시간 초과');
                             delete window[callbackName];
-                            if (script.parentNode) {
+                            if (script && script.parentNode) {
                                 document.body.removeChild(script);
                             }
                             reject(new Error('요청 시간 초과 (10초)'));
