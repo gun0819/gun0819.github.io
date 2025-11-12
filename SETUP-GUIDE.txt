@@ -1,0 +1,121 @@
+==========================================
+독서 인증 플랫폼 - 설치 및 사용 가이드
+==========================================
+
+📦 파일 압축 해제 후 구조:
+
+reading-platform/
+├── index.html              # 메인 HTML 파일 (여기서 시작!)
+├── README.md               # 상세 문서
+│
+├── css/
+│   └── styles.css         # 전체 스타일
+│
+└── js/
+    ├── config.js          # 설정 (⚠️ API 키 입력 필요)
+    ├── storage.js         # LocalStorage 관리
+    ├── api.js             # 알라딘 API
+    ├── store.js           # 데이터 스토어
+    ├── router.js          # 라우터
+    ├── app.js             # 앱 초기화
+    └── components/
+        ├── auth/          # 로그인/회원가입
+        ├── user/          # 사용자 기능
+        └── admin/         # 관리자 기능
+
+
+🚀 빠른 시작 (3단계):
+
+1️⃣ 압축 해제
+   - reading-platform-modular.zip을 원하는 폴더에 압축 해제
+
+2️⃣ API 키 설정 (필수!)
+   - js/config.js 파일 열기
+   - ALADIN_TTB_KEY: '여기에_발급받은_키_입력'
+   
+3️⃣ 실행
+   방법 1) 로컬 서버 실행
+   ```
+   npx http-server .
+   ```
+   
+   방법 2) Netlify Dev 실행
+   ```
+   netlify dev
+   ```
+   
+   방법 3) Live Server (VS Code 확장)
+   - VS Code에서 index.html 우클릭
+   - "Open with Live Server" 선택
+
+
+🔑 테스트 계정:
+
+일반 사용자:
+  이메일: user@test.com
+  비밀번호: user1234
+  
+관리자:
+  이메일: admin@test.com
+  비밀번호: admin1234
+
+
+✅ 현재 구현 완료:
+- ✅ 로그인/회원가입
+- ✅ 메인 대시보드 (검색, 자동완성, 베스트셀러 슬라이드)
+- ✅ 내 감상문 목록 보기
+- ✅ 포인트 시스템 기본
+
+📝 추가 구현 필요:
+- 감상문 작성
+- 퀴즈 풀기
+- 포인트 교환/내역
+- 관리자 페이지
+
+
+🔧 파일 수정 방법:
+
+새로운 기능 추가하려면?
+1. js/components/ 폴더에 새 파일 생성
+2. index.html에 <script> 태그 추가
+3. js/router.js에 라우트 추가
+
+스타일 변경하려면?
+- css/styles.css 파일 수정
+
+설정 변경하려면?
+- js/config.js 파일 수정
+
+
+⚠️ 주의사항:
+
+1. 반드시 웹 서버를 통해 실행하세요!
+   (index.html을 직접 브라우저에서 열면 CORS 오류 발생)
+
+2. Netlify Functions 필요:
+   - /.netlify/functions/aladin-search.js 파일 필요
+   - 베스트셀러 기능 사용 시 필수
+
+3. 브라우저 콘솔 확인:
+   - F12 키로 개발자 도구 열기
+   - Console 탭에서 에러 확인
+
+
+📞 문제 해결:
+
+Q: 베스트셀러가 안 보여요
+A: 1) API 키 확인
+   2) Netlify Functions 설정 확인
+   3) 네트워크 탭에서 API 요청 확인
+
+Q: 로그인이 안 돼요
+A: 브라우저 콘솔에서 에러 메시지 확인
+   LocalStorage가 차단되어 있는지 확인
+
+Q: 페이지가 안 바뀌어요
+A: 라우터가 제대로 로드되었는지 확인
+   모든 <script> 태그가 순서대로 로드되어야 함
+
+
+📚 자세한 내용은 README.md를 참고하세요!
+
