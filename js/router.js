@@ -2,12 +2,13 @@
 const { createRouter, createWebHashHistory } = VueRouter;
 
 const routes = [
-    { path: '/', redirect: '/login' },
+    { path: '/', redirect: '/dashboard' },
     { path: '/login', component: Login },
     { path: '/signup', component: Signup },
     { path: '/find-account', component: FindAccount },
     { path: '/find-password', component: FindPassword },
     { path: '/dashboard', component: UserDashboard },
+    { path: '/search', component: SearchResults },
     { path: '/review/:id', component: ReviewWrite },
     { path: '/quiz/:id', component: Quiz },
     { path: '/my-reviews', component: MyReviews },
@@ -32,7 +33,7 @@ const router = createRouter({
 
 // 라우터 가드
 router.beforeEach((to, from, next) => {
-    const publicPages = ['/', '/login', '/signup', '/find-account', '/find-password'];
+    const publicPages = ['/', '/login', '/signup', '/find-account', '/find-password', '/dashboard', '/search'];
     const authRequired = !publicPages.includes(to.path);
     const loggedIn = store.currentUser;
 
