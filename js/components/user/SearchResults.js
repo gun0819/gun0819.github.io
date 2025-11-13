@@ -2,6 +2,27 @@
 const SearchResults = {
     template: `
         <div>
+            <nav class="navbar">
+                <div class="container">
+                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                        📚 독서 인증 플랫폼
+                    </div>
+                    <div class="navbar-nav">
+                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
+                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <div v-if="isLoggedIn" class="dropdown">
+                            <a class="nav-link">포인트 ▼</a>
+                            <div class="dropdown-content">
+                                <router-link to="/points-exchange">포인트 교환소</router-link>
+                                <router-link to="/points-history">적립 내역</router-link>
+                                <router-link to="/points-requests">신청 내역</router-link>
+                            </div>
+                        </div>
+                        <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                    </div>
+                </div>
+            </nav>
+            
             <div class="top-search-bar">
                 <div class="top-search-container">
                     <div class="top-search-box">
@@ -27,27 +48,6 @@ const SearchResults = {
                     </div>
                 </div>
             </div>
-            
-            <nav class="navbar">
-                <div class="container">
-                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                        📚 독서 인증 플랫폼
-                    </div>
-                    <div class="navbar-nav">
-                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div v-if="isLoggedIn" class="dropdown">
-                            <a class="nav-link">포인트 ▼</a>
-                            <div class="dropdown-content">
-                                <router-link to="/points-exchange">포인트 교환소</router-link>
-                                <router-link to="/points-history">적립 내역</router-link>
-                                <router-link to="/points-requests">신청 내역</router-link>
-                            </div>
-                        </div>
-                        <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
-                    </div>
-                </div>
-            </nav>
             
             <div class="container">
                 <div class="dashboard">
@@ -156,8 +156,6 @@ const SearchResults = {
                 alert('검색어를 입력해주세요.');
                 return;
             }
-            
-            // URL 업데이트 및 검색 수행
             if (this.$route.query.q !== this.searchQuery) {
                 this.$router.push({
                     path: '/search',
@@ -180,9 +178,7 @@ const SearchResults = {
                 this.$router.push('/login');
                 return;
             }
-            
             const bookId = this.selectedBook.isbn || this.selectedBook.id;
-            
             if (store.hasReviewForBook(store.currentUser.id, bookId)) {
                 alert('이미 감상문을 제출한 도서입니다.');
                 return;
@@ -195,9 +191,7 @@ const SearchResults = {
                 this.$router.push('/login');
                 return;
             }
-            
             const bookId = this.selectedBook.isbn || this.selectedBook.id;
-            
             if (store.hasQuizForBook(store.currentUser.id, bookId)) {
                 alert('이미 퀴즈를 푼 책입니다.');
                 return;
