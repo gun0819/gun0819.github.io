@@ -33,33 +33,24 @@ const router = createRouter({
 
 // 라우터 가드
 router.beforeEach((to, from, next) => {
-    const publicPages = ['/login', '/signup', '/find-account', '/find-password'];
+    // 로그인 없이 접근 가능한 페이지
+    const publicPages = ['/login', '/signup', '/find-account', '/find-password', '/dashboard', '/search'];
     const authRequired = !publicPages.includes(to.path);
     const loggedIn = store.currentUser;
 
-    // 로그인이 필요한데 로그인 안 되어있으면
+    // 로그인이 필요한 페이지에 로그인 없이 접근 시
     if (authRequired && !loggedIn) {
         return next('/login');
     }
 
-    // 로그인 되어있는데 로그인 페이지 가려고 하면
-    if (loggedIn && publicPages.includes(to.path)) {
-        if (loggedIn.type === 'admin') {
-            return next('/admin');
-        }
-        return next('/dashboard');
-    }
-
     // 관리자 페이지 접근 제어
-    if (to.path.startsWith('/admin')) {
-        if (!loggedIn || loggedIn.type !== 'admin') {
-            return next('/login');
-        }
+    if (to.path.startsWith('/admin') && loggedIn && loggedIn.type !== 'admin') {
+        return next('/dashboard');
     }
 
-    // 일반 사용자가 관리자 페이지 말고 접근
-    if (loggedIn && loggedIn.type === 'user' && to.path.startsWith('/admin')) {
-        return next('/dashboard');
+    // 관리자가 일반 사용자 페이지 접근 시 (로그인, 회원가입, 대시보드, 검색 제외)
+    if (!publicPages.includes(to.path) && !to.path.startsWith('/admin') && loggedIn && loggedIn.type === 'admin') {
+        return next('/admin');
     }
 
     next();
