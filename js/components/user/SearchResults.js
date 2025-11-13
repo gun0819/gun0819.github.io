@@ -1,38 +1,25 @@
 // 검색 결과 페이지 컴포넌트
 const SearchResults = {
-    template: `
+   template: `
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-content">
-                        <div class="navbar-left">
-                            <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                                📚 독서 인증 플랫폼
-                            </div>
-                            <div class="navbar-nav">
-                                <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
-                                <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                                <div v-if="isLoggedIn" class="dropdown">
-                                    <a class="nav-link">포인트 ▼</a>
-                                    <div class="dropdown-content">
-                                        <router-link to="/points-exchange">포인트 교환소</router-link>
-                                        <router-link to="/points-history">적립 내역</router-link>
-                                        <router-link to="/points-requests">신청 내역</router-link>
-                                    </div>
-                                </div>
-                                <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                        📚 독서 인증 플랫폼
+                    </div>
+                    <div class="navbar-nav">
+                        <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <div class="dropdown">
+                            <a class="nav-link">포인트 ▼</a>
+                            <div class="dropdown-content">
+                                <router-link to="/points-exchange">포인트 교환소</router-link>
+                                <router-link to="/points-history">적립 내역</router-link>
+                                <router-link to="/points-requests">신청 내역</router-link>
                             </div>
                         </div>
-                        <div class="navbar-auth">
-                            <template v-if="isLoggedIn">
-                                <router-link to="/my-page" class="navbar-auth-link">마이페이지</router-link>
-                            </template>
-                            <template v-else>
-                                <router-link to="/signup" class="navbar-auth-link">회원가입</router-link>
-                                <span class="navbar-auth-separator">|</span>
-                                <router-link to="/login" class="navbar-auth-link">로그인</router-link>
-                            </template>
-                        </div>
+                        <router-link to="/my-page" class="nav-link">마이페이지</router-link>
+                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                     </div>
                 </div>
             </nav>
