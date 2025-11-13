@@ -27,10 +27,39 @@ const SearchResults = {
             <div class="top-search-bar">
                 <div class="top-search-container">
                     <div class="top-search-box">
-                        <input v-model="searchQuery" 
-                               class="top-search-input"
-                               placeholder="도서명 또는 저자를 입력하세요..." 
-                               @keyup.enter="newSearch">
+                        <div class="form-group" style="margin: 0; position: relative; flex: 1;">
+                            <input v-model="searchQuery" 
+                                   class="top-search-input"
+                                   placeholder="도서명 또는 저자를 입력하세요..." 
+                                   @input="onSearchInput"
+                                   @keyup.enter="newSearch"
+                                   @focus="showAutocomplete = true">
+                            
+                            <!-- 자동완성 드롭다운 -->
+                            <div v-if="showAutocomplete && autocompleteResults.length > 0" 
+                                 class="autocomplete-dropdown">
+                                <div v-if="isAutocompleteLoading" class="autocomplete-loading">
+                                    검색 중...
+                                </div>
+                                <div v-else>
+                                    <div v-for="book in autocompleteResults" 
+                                         :key="book.id" 
+                                         class="autocomplete-item"
+                                         @click="selectAutocompleteBook(book)">
+                                        <img v-if="book.cover" :src="book.cover" :alt="book.title">
+                                        <div v-else style="width: 50px; height: 70px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📚</div>
+                                        <div class="autocomplete-item-content">
+                                            <div class="autocomplete-item-title">{{ book.title }}</div>
+                                            <div class="autocomplete-item-author">{{ book.author }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="showAutocomplete && !isAutocompleteLoading && searchQuery.length >= 2 && autocompleteResults.length === 0" 
+                                 class="autocomplete-dropdown">
+                                <div class="autocomplete-no-results">검색 결과가 없습니다</div>
+                            </div>
+                        </div>
                         
                         <button class="top-search-button" @click="newSearch" :disabled="isLoading">
                             {{ isLoading ? '검색 중...' : '검색' }}
@@ -115,7 +144,13 @@ const SearchResults = {
             sortBy: this.$route.query.sort || 'Accuracy',
             books: [],
             isLoading: false,
-            selectedBook: null
+            selectedBook: null,
+            
+            // 자동완성 관련
+            showAutocomplete: false,
+            autocompleteResults: [],
+            isAutocompleteLoading: false,
+            autocompleteTimeout: null
         };
     },
     computed: {
@@ -127,8 +162,63 @@ const SearchResults = {
         if (this.searchQuery) {
             await this.performSearch();
         }
+        
+        // 외부 클릭 시 자동완성 닫기
+        document.addEventListener('click', this.handleClickOutside);
+    },
+    beforeUnmount() {
+        document.removeEventListener('click', this.handleClickOutside);
+        if (this.autocompleteTimeout) {
+            clearTimeout(this.autocompleteTimeout);
+        }
     },
     methods: {
+        handleClickOutside(event) {
+            const searchBox = event.target.closest('.top-search-box');
+            if (!searchBox) {
+                this.showAutocomplete = false;
+            }
+        },
+        onSearchInput() {
+            // 입력값이 2글자 미만이면 자동완성 숨김
+            if (this.searchQuery.length < 2) {
+                this.showAutocomplete = false;
+                this.autocompleteResults = [];
+                return;
+            }
+            
+            // 이전 타이머 취소
+            if (this.autocompleteTimeout) {
+                clearTimeout(this.autocompleteTimeout);
+            }
+            
+            // 500ms 후에 검색 (debounce)
+            this.autocompleteTimeout = setTimeout(async () => {
+                await this.loadAutocomplete();
+            }, 500);
+        },
+        async loadAutocomplete() {
+            if (this.searchQuery.length < 2) return;
+            
+            this.isAutocompleteLoading = true;
+            this.showAutocomplete = true;
+            
+            try {
+                // 정확도순으로 최대 10개 결과만 가져오기
+                const results = await bookAPI.searchAladin(this.searchQuery, 1, 'Accuracy');
+                this.autocompleteResults = results.slice(0, 10);
+            } catch (error) {
+                console.error('자동완성 검색 오류:', error);
+                this.autocompleteResults = [];
+            } finally {
+                this.isAutocompleteLoading = false;
+            }
+        },
+        selectAutocompleteBook(book) {
+            this.selectedBook = book;
+            this.showAutocomplete = false;
+            this.searchQuery = book.title;
+        },
         async performSearch() {
             this.isLoading = true;
             try {
@@ -146,6 +236,7 @@ const SearchResults = {
                 alert('검색어를 입력해주세요.');
                 return;
             }
+            this.showAutocomplete = false;
             if (this.$route.query.q !== this.searchQuery) {
                 this.$router.push({
                     path: '/search',
