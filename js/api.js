@@ -1,14 +1,14 @@
 // 알라딘 API 연동
 const bookAPI = {
-    async searchAladin(query, page = 1) {
+    async searchAladin(query, page = 1, sortBy = 'Accuracy') {
         if (!query.trim()) {
             return [];
         }
 
-        console.log('🔍 알라딘 검색 시작:', query);
+        console.log('🔍 알라딘 검색 시작:', query, 'Sort:', sortBy);
 
         try {
-            const response = await fetch(`/.netlify/functions/aladin-search?query=${encodeURIComponent(query)}&page=${page}&ttbkey=${CONFIG.ALADIN_TTB_KEY}`);
+            const response = await fetch(`/.netlify/functions/aladin-search?query=${encodeURIComponent(query)}&page=${page}&sortBy=${sortBy}&ttbkey=${CONFIG.ALADIN_TTB_KEY}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
