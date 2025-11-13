@@ -2,14 +2,41 @@
 const UserDashboard = {
     template: `
         <div>
+            <div class="top-search-bar">
+                <div class="top-search-container">
+                    <div class="top-search-box">
+                        <input v-model="searchQuery" 
+                               class="top-search-input"
+                               placeholder="도서명 또는 저자를 입력하세요..." 
+                               @keyup.enter="searchBooks">
+                        
+                        <button class="top-search-button" @click="searchBooks" :disabled="isLoading">
+                            {{ isLoading ? '검색 중...' : '검색' }}
+                        </button>
+                    </div>
+                    
+                    <div class="top-auth-buttons">
+                        <template v-if="isLoggedIn">
+                            <router-link to="/my-page" class="top-auth-link">마이페이지</router-link>
+                        </template>
+                        <template v-else>
+                            <router-link to="/signup" class="top-auth-link">회원가입</router-link>
+                            <span class="top-auth-separator">|</span>
+                            <router-link to="/login" class="top-auth-link">로그인</router-link>
+                        </template>
+                    </div>
+                </div>
+            </div>
+            
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-brand">📚 독서 인증 플랫폼</div>
+                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                        📚 독서 인증 플랫폼
+                    </div>
                     <div class="navbar-nav">
-                        <router-link to="/dashboard" class="nav-link active">홈</router-link>
-                        <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div class="dropdown">
+                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
+                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <div v-if="isLoggedIn" class="dropdown">
                             <a class="nav-link">포인트 ▼</a>
                             <div class="dropdown-content">
                                 <router-link to="/points-exchange">포인트 교환소</router-link>
@@ -17,48 +44,13 @@ const UserDashboard = {
                                 <router-link to="/points-requests">신청 내역</router-link>
                             </div>
                         </div>
-                        <router-link to="/my-page" class="nav-link">마이페이지</router-link>
-                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                     </div>
                 </div>
             </nav>
             
-            <div class="main-search-container">
-                <div class="main-search-box">
-                    <input v-model="searchQuery" 
-                           class="main-search-input"
-                           placeholder="책 제목을 검색하세요..." 
-                           @input="onSearchInput"
-                           @keyup.enter="searchBooks"
-                           @focus="showAutocomplete = true">
-                    
-                    <div v-if="showAutocomplete && searchQuery.length > 0" 
-                         class="autocomplete-dropdown">
-                        <div v-if="isAutocompleteLoading" class="autocomplete-loading">검색 중...</div>
-                        <div v-else-if="autocompleteResults.length > 0">
-                            <div v-for="book in autocompleteResults" 
-                                 :key="book.id" 
-                                 class="autocomplete-item"
-                                 @click="selectBook(book)">
-                                <img v-if="book.cover" :src="book.cover" :alt="book.title">
-                                <div v-else style="width: 50px; height: 70px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; justify-content: center;">📚</div>
-                                <div class="autocomplete-item-content">
-                                    <div class="autocomplete-item-title">{{ book.title }}</div>
-                                    <div class="autocomplete-item-author">{{ book.author }} · {{ book.publisher }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else-if="!isAutocompleteLoading" class="autocomplete-no-results">검색 결과가 없습니다</div>
-                    </div>
-                    
-                    <button class="main-search-button" @click="searchBooks" :disabled="isLoading">
-                        {{ isLoading ? '검색 중...' : '검색' }}
-                    </button>
-                </div>
-            </div>
-            
             <div class="container">
-                <div class="stats-grid">
+                <div v-if="isLoggedIn" class="stats-grid">
                     <div class="stat-card" @click="$router.push('/my-reviews')">
                         <h3>{{ reviewCount }}</h3>
                         <p>작성한 감상문</p>
@@ -108,6 +100,10 @@ const UserDashboard = {
                         </div>
                         <div class="slider-nav next" @click="nextSlide">›</div>
                     </div>
+                    
+                    <div v-else style="text-align: center; padding: 40px; color: #666;">
+                        <p>도서 목록을 불러올 수 없습니다.</p>
+                    </div>
                 </div>
             </div>
 
@@ -121,9 +117,13 @@ const UserDashboard = {
                     <p v-if="selectedBook.description" style="margin-top: 16px; color: #666; font-size: 14px;">
                         {{ selectedBook.description.substring(0, 150) }}...
                     </p>
+                    <div v-if="!isLoggedIn" class="alert-box warning" style="margin-top: 20px;">
+                        감상문 작성과 퀴즈 풀기는 로그인 후 이용 가능합니다.
+                    </div>
                     <div class="modal-actions">
-                        <button @click="startReview" class="btn btn-sm">감상문 작성</button>
-                        <button @click="startQuiz" class="btn btn-sm">퀴즈 풀기</button>
+                        <button v-if="isLoggedIn" @click="startReview" class="btn btn-sm">감상문 작성</button>
+                        <button v-if="isLoggedIn" @click="startQuiz" class="btn btn-sm">퀴즈 풀기</button>
+                        <button v-if="!isLoggedIn" @click="$router.push('/login')" class="btn btn-sm">로그인하기</button>
                         <button @click="selectedBook = null" class="btn btn-sm btn-secondary">닫기</button>
                     </div>
                 </div>
@@ -132,15 +132,11 @@ const UserDashboard = {
     `,
     data() {
         return {
-            user: store.currentUser,
-            reviewCount: store.getReviews().filter(r => r.userId === store.currentUser.id).length,
-            quizCount: store.getQuizResults().filter(q => q.userId === store.currentUser.id).length,
+            user: store.currentUser || { points: 0 },
+            reviewCount: store.currentUser ? store.getReviews().filter(r => r.userId === store.currentUser.id).length : 0,
+            quizCount: store.currentUser ? store.getQuizResults().filter(q => q.userId === store.currentUser.id).length : 0,
             
             searchQuery: '',
-            showAutocomplete: false,
-            autocompleteResults: [],
-            isAutocompleteLoading: false,
-            autocompleteTimeout: null,
             isLoading: false,
             selectedBook: null,
             
@@ -155,7 +151,7 @@ const UserDashboard = {
     computed: {
         isLoggedIn() {
             return store.currentUser !== null;
-        },    
+        },
         currentFilterName() {
             const names = {
                 'bestseller': '올해 인기 도서',
@@ -167,92 +163,37 @@ const UserDashboard = {
         }
     },
     async mounted() {
-        document.addEventListener('click', this.handleClickOutside);
         await this.loadBestsellers();
         this.startAutoSlide();
     },
     beforeUnmount() {
-        document.removeEventListener('click', this.handleClickOutside);
-        if (this.autocompleteTimeout) {
-            clearTimeout(this.autocompleteTimeout);
-        }
         this.stopAutoSlide();
     },
     methods: {
-        handleClickOutside(event) {
-            const searchBox = event.target.closest('.main-search-box');
-            if (!searchBox) {
-                this.showAutocomplete = false;
-            }
-        },
-        
-        onSearchInput() {
-            if (this.searchQuery.length === 0) {
-                this.showAutocomplete = false;
-                this.autocompleteResults = [];
+        searchBooks() {
+            if (!this.searchQuery.trim()) {
+                alert('검색어를 입력해주세요.');
                 return;
             }
-
-            this.showAutocomplete = true;
             
-            if (this.autocompleteTimeout) {
-                clearTimeout(this.autocompleteTimeout);
-            }
-
-            this.autocompleteTimeout = setTimeout(() => {
-                this.fetchAutocomplete();
-            }, 300);
-        },
-        
-        async fetchAutocomplete() {
-            if (!this.searchQuery.trim()) {
-                this.autocompleteResults = [];
-                return;
-            }
-
-            this.isAutocompleteLoading = true;
-
-            try {
-                const results = await bookAPI.searchAladin(this.searchQuery);
-                this.autocompleteResults = results.slice(0, 5);
-            } catch (error) {
-                console.error('자동완성 에러:', error);
-                this.autocompleteResults = [];
-            } finally {
-                this.isAutocompleteLoading = false;
-            }
-        },
-        
-        async searchBooks() {
-            this.showAutocomplete = false;
-
-            if (!this.searchQuery.trim()) {
-                return;
-            }
-
-            this.isLoading = true;
-
-            try {
-                const results = await bookAPI.searchAladin(this.searchQuery);
-                if (results.length > 0) {
-                    this.selectBook(results[0]);
-                } else {
-                    alert('검색 결과가 없습니다.');
-                }
-            } catch (error) {
-                console.error('검색 에러:', error);
-                alert('도서 검색 중 오류가 발생했습니다.');
-            } finally {
-                this.isLoading = false;
-            }
+            // 검색 결과 페이지로 이동
+            this.$router.push({
+                path: '/search',
+                query: { q: this.searchQuery }
+            });
         },
         
         selectBook(book) {
             this.selectedBook = book;
-            this.showAutocomplete = false;
         },
         
         startReview() {
+            if (!this.isLoggedIn) {
+                alert('로그인이 필요합니다.');
+                this.$router.push('/login');
+                return;
+            }
+            
             const bookId = this.selectedBook.isbn || this.selectedBook.id;
             
             if (store.hasReviewForBook(store.currentUser.id, bookId)) {
@@ -263,6 +204,12 @@ const UserDashboard = {
         },
         
         startQuiz() {
+            if (!this.isLoggedIn) {
+                alert('로그인이 필요합니다.');
+                this.$router.push('/login');
+                return;
+            }
+            
             const bookId = this.selectedBook.isbn || this.selectedBook.id;
             
             if (store.hasQuizForBook(store.currentUser.id, bookId)) {
