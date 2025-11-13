@@ -4,21 +4,28 @@ const MyReviews = {
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                        📚 독서 인증 플랫폼
-                    </div>
-                    <div class="navbar-nav">
-                        <router-link to="/my-reviews" class="nav-link active">내 감상문</router-link>
-                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div class="dropdown">
-                            <a class="nav-link">포인트 ▼</a>
-                            <div class="dropdown-content">
-                                <router-link to="/points-exchange">포인트 교환소</router-link>
-                                <router-link to="/points-history">적립 내역</router-link>
-                                <router-link to="/points-requests">신청 내역</router-link>
+                    <div class="navbar-content">
+                        <div class="navbar-left">
+                            <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                                📚 독서 인증 플랫폼
+                            </div>
+                            <div class="navbar-nav">
+                                <router-link to="/my-reviews" class="nav-link active">내 감상문</router-link>
+                                <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                                <div class="dropdown">
+                                    <a class="nav-link">포인트 ▼</a>
+                                    <div class="dropdown-content">
+                                        <router-link to="/points-exchange">포인트 교환소</router-link>
+                                        <router-link to="/points-history">적립 내역</router-link>
+                                        <router-link to="/points-requests">신청 내역</router-link>
+                                    </div>
+                                </div>
+                                <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
                         </div>
-                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        <div class="navbar-auth">
+                            <router-link to="/my-page" class="navbar-auth-link">마이페이지</router-link>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -31,9 +38,6 @@ const MyReviews = {
                                placeholder="도서명 또는 저자를 입력하세요..." 
                                @keyup.enter="searchBooks">
                         <button class="top-search-button" @click="searchBooks">검색</button>
-                    </div>
-                    <div class="top-auth-buttons">
-                        <router-link to="/my-page" class="top-auth-link">마이페이지</router-link>
                     </div>
                 </div>
             </div>
