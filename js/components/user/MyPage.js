@@ -18,7 +18,7 @@ const MyPage = {
                                 <router-link to="/points-requests">신청 내역</router-link>
                             </div>
                         </div>
-                        <router-link to="/my-page" class="nav-link">마이페이지</router-link>
+                        <router-link to="/my-page" class="nav-link active">마이페이지</router-link>
                         <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                     </div>
                 </div>
