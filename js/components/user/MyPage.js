@@ -4,9 +4,10 @@ const MyPage = {
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-brand">📚 독서 인증 플랫폼</div>
+                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                        📚 독서 인증 플랫폼
+                    </div>
                     <div class="navbar-nav">
-                        <router-link to="/dashboard" class="nav-link">홈</router-link>
                         <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
                         <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
                         <div class="dropdown">
