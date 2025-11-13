@@ -1,23 +1,7 @@
+// 내 감상문 목록 컴포넌트
 const MyReviews = {
     template: `
         <div>
-            <div class="top-search-bar">
-                <div class="top-search-container">
-                    <div class="top-search-box">
-                        <input v-model="searchQuery" 
-                               class="top-search-input"
-                               placeholder="도서명 또는 저자를 입력하세요..." 
-                               @keyup.enter="searchBooks">
-                        
-                        <button class="top-search-button" @click="searchBooks">검색</button>
-                    </div>
-                    
-                    <div class="top-auth-buttons">
-                        <router-link to="/my-page" class="top-auth-link">마이페이지</router-link>
-                    </div>
-                </div>
-            </div>
-            
             <nav class="navbar">
                 <div class="container">
                     <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
@@ -38,14 +22,28 @@ const MyReviews = {
                     </div>
                 </div>
             </nav>
+            
+            <div class="top-search-bar">
+                <div class="top-search-container">
+                    <div class="top-search-box">
+                        <input v-model="searchQuery" 
+                               class="top-search-input"
+                               placeholder="도서명 또는 저자를 입력하세요..." 
+                               @keyup.enter="searchBooks">
+                        <button class="top-search-button" @click="searchBooks">검색</button>
+                    </div>
+                    <div class="top-auth-buttons">
+                        <router-link to="/my-page" class="top-auth-link">마이페이지</router-link>
+                    </div>
+                </div>
+            </div>
+            
             <div class="container">
                 <div class="dashboard">
                     <h2>작성한 감상문 📝</h2>
-                    
                     <div style="margin-bottom: 20px;">
                         <button @click="$router.push('/dashboard')" class="btn btn-sm">+ 새로운 감상문 작성하기</button>
                     </div>
-                    
                     <div v-if="myReviews.length > 0">
                         <div class="table-container">
                             <table>
@@ -75,16 +73,13 @@ const MyReviews = {
                                         <td>
                                             <button v-if="review.status === 'pending' || review.status === 'rejected'" 
                                                     @click="editReview(review)" 
-                                                    class="btn btn-sm">
-                                                수정
-                                            </button>
+                                                    class="btn btn-sm">수정</button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                    
                     <div v-else style="text-align: center; padding: 60px 20px; color: #666;">
                         <div style="font-size: 64px; margin-bottom: 16px;">📝</div>
                         <h3 style="margin-bottom: 12px; color: #333;">아직 작성한 감상문이 없습니다</h3>
@@ -113,10 +108,7 @@ const MyReviews = {
                 alert('검색어를 입력해주세요.');
                 return;
             }
-            this.$router.push({
-                path: '/search',
-                query: { q: this.searchQuery }
-            });
+            this.$router.push({ path: '/search', query: { q: this.searchQuery } });
         },
         getStatusText(status) {
             const statusMap = {
