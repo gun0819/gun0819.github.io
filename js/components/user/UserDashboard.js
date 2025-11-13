@@ -4,35 +4,24 @@ const UserDashboard = {
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-content">
-                        <div class="navbar-left">
-                            <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                                📚 독서 인증 플랫폼
-                            </div>
-                            <div class="navbar-nav">
-                                <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
-                                <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                                <div v-if="isLoggedIn" class="dropdown">
-                                    <a class="nav-link">포인트 ▼</a>
-                                    <div class="dropdown-content">
-                                        <router-link to="/points-exchange">포인트 교환소</router-link>
-                                        <router-link to="/points-history">적립 내역</router-link>
-                                        <router-link to="/points-requests">신청 내역</router-link>
-                                    </div>
-                                </div>
-                                <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                        📚 독서 인증 플랫폼
+                    </div>
+                    <div class="navbar-nav">
+                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
+                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <div v-if="isLoggedIn" class="dropdown">
+                            <a class="nav-link">포인트 ▼</a>
+                            <div class="dropdown-content">
+                                <router-link to="/points-exchange">포인트 교환소</router-link>
+                                <router-link to="/points-history">적립 내역</router-link>
+                                <router-link to="/points-requests">신청 내역</router-link>
                             </div>
                         </div>
-                        <div class="navbar-auth">
-                            <template v-if="isLoggedIn">
-                                <router-link to="/my-page" class="navbar-auth-link">마이페이지</router-link>
-                            </template>
-                            <template v-else>
-                                <router-link to="/signup" class="navbar-auth-link">회원가입</router-link>
-                                <span class="navbar-auth-separator">|</span>
-                                <router-link to="/login" class="navbar-auth-link">로그인</router-link>
-                            </template>
-                        </div>
+                        <router-link v-if="isLoggedIn" to="/my-page" class="nav-link">마이페이지</router-link>
+                        <router-link v-if="!isLoggedIn" to="/signup" class="nav-link">회원가입</router-link>
+                        <router-link v-if="!isLoggedIn" to="/login" class="nav-link">로그인</router-link>
+                        <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                     </div>
                 </div>
             </nav>
@@ -40,10 +29,39 @@ const UserDashboard = {
             <div class="top-search-bar">
                 <div class="top-search-container">
                     <div class="top-search-box">
-                        <input v-model="searchQuery" 
-                               class="top-search-input"
-                               placeholder="도서명 또는 저자를 입력하세요..." 
-                               @keyup.enter="searchBooks">
+                        <div class="form-group" style="margin: 0; position: relative; flex: 1;">
+                            <input v-model="searchQuery" 
+                                   class="top-search-input"
+                                   placeholder="도서명 또는 저자를 입력하세요..." 
+                                   @input="onSearchInput"
+                                   @keyup.enter="searchBooks"
+                                   @focus="showAutocomplete = true">
+                            
+                            <!-- 자동완성 드롭다운 -->
+                            <div v-if="showAutocomplete && autocompleteResults.length > 0" 
+                                 class="autocomplete-dropdown">
+                                <div v-if="isAutocompleteLoading" class="autocomplete-loading">
+                                    검색 중...
+                                </div>
+                                <div v-else>
+                                    <div v-for="book in autocompleteResults" 
+                                         :key="book.id" 
+                                         class="autocomplete-item"
+                                         @click="selectAutocompleteBook(book)">
+                                        <img v-if="book.cover" :src="book.cover" :alt="book.title">
+                                        <div v-else style="width: 50px; height: 70px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📚</div>
+                                        <div class="autocomplete-item-content">
+                                            <div class="autocomplete-item-title">{{ book.title }}</div>
+                                            <div class="autocomplete-item-author">{{ book.author }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="showAutocomplete && !isAutocompleteLoading && searchQuery.length >= 2 && autocompleteResults.length === 0" 
+                                 class="autocomplete-dropdown">
+                                <div class="autocomplete-no-results">검색 결과가 없습니다</div>
+                            </div>
+                        </div>
                         
                         <button class="top-search-button" @click="searchBooks" :disabled="isLoading">
                             {{ isLoading ? '검색 중...' : '검색' }}
@@ -76,10 +94,6 @@ const UserDashboard = {
                                     @click="changeFilter('bestseller')">올해 인기 순</button>
                             <button :class="['filter-btn', {active: currentFilter === 'month'}]" 
                                     @click="changeFilter('month')">이번달 인기 순</button>
-                            <button :class="['filter-btn', {active: currentFilter === 'review-year'}]" 
-                                    @click="changeFilter('review-year')">올해 감상문 많은 순</button>
-                            <button :class="['filter-btn', {active: currentFilter === 'review-month'}]" 
-                                    @click="changeFilter('review-month')">이번달 감상문 많은 순</button>
                         </div>
                     </div>
                     
@@ -94,7 +108,7 @@ const UserDashboard = {
                             <div v-for="book in currentBooks" :key="book.id" class="book-card" @click="selectBook(book)">
                                 <div style="position: relative;">
                                     <img v-if="book.cover" :src="book.cover" :alt="book.title" class="book-card-cover">
-                                    <div v-else class="book-card-cover" style="display: flex; align-items: center; justify-content: center; font-size: 48px;">📚</div>
+                                    <div v-else class="book-card-cover" style="display: flex; align-items: center; justify-content: center; font-size: 48px; background: #f5f5f5;">📚</div>
                                     <div v-if="book.rank" class="book-card-rank">{{ book.rank }}</div>
                                 </div>
                                 <div class="book-card-title">{{ book.title }}</div>
@@ -143,6 +157,12 @@ const UserDashboard = {
             isLoading: false,
             selectedBook: null,
             
+            // 자동완성 관련
+            showAutocomplete: false,
+            autocompleteResults: [],
+            isAutocompleteLoading: false,
+            autocompleteTimeout: null,
+            
             currentFilter: 'bestseller',
             currentBooks: [],
             isLoadingBestseller: false,
@@ -158,9 +178,7 @@ const UserDashboard = {
         currentFilterName() {
             const names = {
                 'bestseller': '올해 인기 도서',
-                'month': '이번달 인기 도서',
-                'review-year': '올해 감상문이 많은 도서',
-                'review-month': '이번달 감상문이 많은 도서'
+                'month': '이번달 인기 도서'
             };
             return names[this.currentFilter] || '도서 목록';
         }
@@ -168,16 +186,70 @@ const UserDashboard = {
     async mounted() {
         await this.loadBestsellers();
         this.startAutoSlide();
+        
+        // 외부 클릭 시 자동완성 닫기
+        document.addEventListener('click', this.handleClickOutside);
     },
     beforeUnmount() {
         this.stopAutoSlide();
+        document.removeEventListener('click', this.handleClickOutside);
+        if (this.autocompleteTimeout) {
+            clearTimeout(this.autocompleteTimeout);
+        }
     },
     methods: {
+        handleClickOutside(event) {
+            const searchBox = event.target.closest('.top-search-box');
+            if (!searchBox) {
+                this.showAutocomplete = false;
+            }
+        },
+        onSearchInput() {
+            // 입력값이 2글자 미만이면 자동완성 숨김
+            if (this.searchQuery.length < 2) {
+                this.showAutocomplete = false;
+                this.autocompleteResults = [];
+                return;
+            }
+            
+            // 이전 타이머 취소
+            if (this.autocompleteTimeout) {
+                clearTimeout(this.autocompleteTimeout);
+            }
+            
+            // 500ms 후에 검색 (debounce)
+            this.autocompleteTimeout = setTimeout(async () => {
+                await this.loadAutocomplete();
+            }, 500);
+        },
+        async loadAutocomplete() {
+            if (this.searchQuery.length < 2) return;
+            
+            this.isAutocompleteLoading = true;
+            this.showAutocomplete = true;
+            
+            try {
+                // 정확도순으로 최대 10개 결과만 가져오기
+                const results = await bookAPI.searchAladin(this.searchQuery, 1, 'Accuracy');
+                this.autocompleteResults = results.slice(0, 10);
+            } catch (error) {
+                console.error('자동완성 검색 오류:', error);
+                this.autocompleteResults = [];
+            } finally {
+                this.isAutocompleteLoading = false;
+            }
+        },
+        selectAutocompleteBook(book) {
+            this.selectedBook = book;
+            this.showAutocomplete = false;
+            this.searchQuery = book.title;
+        },
         searchBooks() {
             if (!this.searchQuery.trim()) {
                 alert('검색어를 입력해주세요.');
                 return;
             }
+            this.showAutocomplete = false;
             this.$router.push({
                 path: '/search',
                 query: { q: this.searchQuery }
@@ -225,32 +297,6 @@ const UserDashboard = {
                     this.currentBooks = await bookAPI.getBestseller('Bestseller');
                 } else if (this.currentFilter === 'month') {
                     this.currentBooks = await bookAPI.getBestseller('ItemNewSpecial');
-                } else if (this.currentFilter === 'review-year' || this.currentFilter === 'review-month') {
-                    const allBooks = await bookAPI.getBestseller('Bestseller');
-                    const reviews = store.getReviews();
-                    const now = new Date();
-                    const startOfYear = new Date(now.getFullYear(), 0, 1);
-                    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                    const bookReviewCounts = {};
-                    reviews.forEach(review => {
-                        const reviewDate = new Date(review.date);
-                        const bookIsbn = review.book?.isbn || review.bookId;
-                        let shouldCount = false;
-                        if (this.currentFilter === 'review-year') {
-                            shouldCount = reviewDate >= startOfYear;
-                        } else {
-                            shouldCount = reviewDate >= startOfMonth;
-                        }
-                        if (shouldCount && bookIsbn) {
-                            bookReviewCounts[bookIsbn] = (bookReviewCounts[bookIsbn] || 0) + 1;
-                        }
-                    });
-                    allBooks.forEach(book => {
-                        book.reviewCount = bookReviewCounts[book.isbn] || 0;
-                    });
-                    this.currentBooks = allBooks
-                        .sort((a, b) => b.reviewCount - a.reviewCount)
-                        .map((book, index) => ({ ...book, rank: index + 1 }));
                 }
             } catch (error) {
                 console.error('베스트셀러 로드 에러:', error);
