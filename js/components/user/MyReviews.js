@@ -20,27 +20,13 @@ const MyReviews = {
                                         <router-link to="/points-requests">신청 내역</router-link>
                                     </div>
                                 </div>
+                                <router-link to="/my-page" class="nav-link">마이페이지</router-link>
                                 <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                             </div>
-                        </div>
-                        <div class="navbar-auth">
-                            <router-link to="/my-page" class="navbar-auth-link">마이페이지</router-link>
                         </div>
                     </div>
                 </div>
             </nav>
-            
-            <div class="top-search-bar">
-                <div class="top-search-container">
-                    <div class="top-search-box">
-                        <input v-model="searchQuery" 
-                               class="top-search-input"
-                               placeholder="도서명 또는 저자를 입력하세요..." 
-                               @keyup.enter="searchBooks">
-                        <button class="top-search-button" @click="searchBooks">검색</button>
-                    </div>
-                </div>
-            </div>
             
             <div class="container">
                 <div class="dashboard">
