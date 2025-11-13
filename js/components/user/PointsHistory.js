@@ -1,7 +1,6 @@
 // 포인트 적립 내역 컴포넌트
 const PointsHistory = {
     template: `
-            template: `
         <div>
             <nav class="navbar">
                 <div class="container">
