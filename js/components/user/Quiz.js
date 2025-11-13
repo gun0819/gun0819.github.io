@@ -30,9 +30,23 @@ const Quiz = {
                         <p>퀴즈를 불러오는 중...</p>
                     </div>
                     
+                    <div v-else-if="alreadyCompleted" style="text-align: center; padding: 60px 20px;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">✅</div>
+                        <h2>이미 완료한 퀴즈입니다</h2>
+                        <p style="color: #666; margin: 20px 0;">이 책의 퀴즈는 이미 응시하셨습니다.</p>
+                        <div style="margin-top: 30px;">
+                            <button @click="$router.push('/completed-quizzes')" class="btn btn-sm" style="margin-right: 10px;">
+                                퀴즈 결과 보기
+                            </button>
+                            <button @click="$router.push('/dashboard')" class="btn btn-sm btn-secondary">
+                                홈으로
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div v-else-if="book && !quizCompleted">
                         <div class="back-button">
-                            <button @click="$router.back()" class="btn btn-sm btn-secondary">← 뒤로가기</button>
+                            <button @click="goBack" class="btn btn-sm btn-secondary">← 뒤로가기</button>
                         </div>
                         
                         <h2>독서 퀴즈 🎯</h2>
@@ -74,7 +88,7 @@ const Quiz = {
                                         style="min-width: 200px;">
                                     {{ answers.length === quiz.questions.length ? '제출하기' : '모든 문제에 답해주세요' }}
                                 </button>
-                                <button @click="$router.back()" class="btn btn-secondary" style="margin-left: 10px;">취소</button>
+                                <button @click="goBack" class="btn btn-secondary" style="margin-left: 10px;">취소</button>
                             </div>
                         </div>
                         <div v-else>
@@ -128,6 +142,7 @@ const Quiz = {
             quiz: null,
             answers: [],
             quizCompleted: false,
+            alreadyCompleted: false,
             score: 0,
             correctAnswers: 0,
             isLoading: true,
@@ -135,6 +150,13 @@ const Quiz = {
         };
     },
     async mounted() {
+        // 이미 제출한 퀴즈인지 확인
+        if (store.currentUser && store.hasQuizForBook(store.currentUser.id, this.bookId)) {
+            this.alreadyCompleted = true;
+            this.isLoading = false;
+            return;
+        }
+        
         try {
             // 알라딘 API에서 책 정보 가져오기
             const results = await bookAPI.searchAladin(this.bookId);
@@ -151,6 +173,9 @@ const Quiz = {
         this.isLoading = false;
     },
     methods: {
+        goBack() {
+            this.$router.back();
+        },
         selectAnswer(questionIndex, optionIndex) {
             // answers 배열을 업데이트 (Vue 3의 반응성 유지)
             this.answers[questionIndex] = optionIndex;
@@ -159,6 +184,13 @@ const Quiz = {
         submitQuiz() {
             if (this.answers.length !== this.quiz.questions.length) {
                 alert('모든 문제에 답해주세요.');
+                return;
+            }
+            
+            // 재제출 방지 확인
+            if (store.hasQuizForBook(store.currentUser.id, this.bookId)) {
+                alert('이미 제출한 퀴즈입니다.');
+                this.$router.push('/completed-quizzes');
                 return;
             }
             
