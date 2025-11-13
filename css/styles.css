@@ -241,14 +241,62 @@ body {
     text-decoration: underline;
 }
 
-/* 상단 검색 바 */
-.top-search-bar {
+/* 네비게이션 */
+.navbar {
     background: white;
-    padding: 12px 0;
+    padding: 16px 0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     position: sticky;
     top: 0;
     z-index: 200;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-brand {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+}
+
+.navbar-nav {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    color: #555;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: background 0.3s, color 0.3s;
+    font-size: 14px;
+}
+
+.nav-link:hover {
+    background: #f5f6f8;
+    color: #333;
+}
+
+.nav-link.active {
+    background: #667eea;
+    color: white;
+}
+
+/* 상단 검색 바 (navbar 아래) */
+.top-search-bar {
+    background: white;
+    padding: 16px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-bottom: 1px solid #e0e0e0;
 }
 
 .top-search-container {
@@ -326,56 +374,6 @@ body {
 .top-auth-separator {
     color: #ddd;
     padding: 0 4px;
-}
-
-/* 네비게이션 */
-.navbar {
-    background: white;
-    padding: 16px 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    position: sticky;
-    top: 68px;
-    z-index: 100;
-}
-
-.navbar .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.navbar-brand {
-    font-size: 20px;
-    font-weight: bold;
-    color: #333;
-    cursor: pointer;
-}
-
-.navbar-nav {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.nav-link {
-    color: #555;
-    text-decoration: none;
-    font-weight: 500;
-    padding: 8px 16px;
-    border-radius: 8px;
-    transition: background 0.3s, color 0.3s;
-    font-size: 14px;
-}
-
-.nav-link:hover {
-    background: #f5f6f8;
-    color: #333;
-}
-
-.nav-link.active {
-    background: #667eea;
-    color: white;
 }
 
 /* 드롭다운 메뉴 */
@@ -966,10 +964,6 @@ td.clickable:hover {
     .top-auth-buttons {
         width: 100%;
         justify-content: center;
-    }
-    
-    .navbar {
-        top: 142px;
     }
     
     .navbar-nav {
