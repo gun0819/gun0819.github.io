@@ -9,7 +9,7 @@ const CompletedQuizzes = {
                     </div>
                     <div class="navbar-nav">
                         <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link active">내 퀴즈</router-link>
                         <div v-if="isLoggedIn" class="dropdown">
                             <a class="nav-link">포인트 ▼</a>
                             <div class="dropdown-content">
