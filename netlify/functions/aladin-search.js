@@ -1,5 +1,4 @@
 // Netlify 서버리스 함수 - 알라딘 API 프록시
-const https = require('https');
 const http = require('http');
 
 exports.handler = async (event, context) => {
@@ -22,24 +21,33 @@ exports.handler = async (event, context) => {
 
   // GET 파라미터 추출
   const query = event.queryStringParameters.query || '';
+  const queryType = event.queryStringParameters.queryType || '';
   const page = event.queryStringParameters.page || 1;
   const ttbkey = event.queryStringParameters.ttbkey || 'ttbgun081901601001';
+  const sortBy = event.queryStringParameters.sortBy || 'Accuracy';
 
-  if (!query) {
+  let apiUrl;
+
+  // 베스트셀러 조회
+  if (queryType) {
+    apiUrl = `http://www.aladin.co.kr/ttb/api/ItemList.aspx?ttbkey=${ttbkey}&QueryType=${queryType}&MaxResults=50&start=1&SearchTarget=Book&output=js&Version=20131101&Cover=Big`;
+  } 
+  // 검색 조회
+  else if (query) {
+    apiUrl = `http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ttbkey}&Query=${encodeURIComponent(query)}&QueryType=Title&MaxResults=50&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big&Sort=${sortBy}`;
+  } 
+  else {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ error: '검색어가 필요합니다' })
+      body: JSON.stringify({ error: '검색어 또는 쿼리 타입이 필요합니다' })
     };
   }
-
-  // 알라딘 API URL 생성
-  const apiUrl = `http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ttbkey}&Query=${encodeURIComponent(query)}&QueryType=Keyword&MaxResults=20&start=${page}&SearchTarget=Book&output=js&Version=20131101&Cover=Big`;
 
   console.log('알라딘 API 요청:', apiUrl);
 
   return new Promise((resolve, reject) => {
-    // HTTP 요청 (알라딘은 HTTPS가 아닌 HTTP 사용)
+    // HTTP 요청 (알라딘은 HTTP 사용)
     http.get(apiUrl, (res) => {
       let data = '';
 
@@ -64,7 +72,8 @@ exports.handler = async (event, context) => {
             headers,
             body: JSON.stringify({ 
               error: 'API 응답 파싱 실패',
-              details: error.message 
+              details: error.message,
+              rawData: data.substring(0, 200)
             })
           });
         }
@@ -83,3 +92,5 @@ exports.handler = async (event, context) => {
     });
   });
 };
+
+
