@@ -153,6 +153,9 @@ const UserDashboard = {
         };
     },
     computed: {
+        isLoggedIn() {
+            return store.currentUser !== null;
+        },    
         currentFilterName() {
             const names = {
                 'bestseller': '올해 인기 도서',
