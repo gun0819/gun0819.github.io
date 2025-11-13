@@ -34,10 +34,6 @@ const CompletedQuizzes = {
                 <div class="dashboard">
                     <h2>완료한 퀴즈 🎯</h2>
                     
-                    <div style="margin-bottom: 20px;">
-                        <button @click="$router.push('/dashboard')" class="btn btn-sm">+ 새로운 퀴즈 도전하기</button>
-                    </div>
-                    
                     <div v-if="myQuizzes.length > 0">
                         <div class="table-container">
                             <table>
