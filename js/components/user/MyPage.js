@@ -2,15 +2,32 @@
 const MyPage = {
     template: `
         <div>
+            <div class="top-search-bar">
+                <div class="top-search-container">
+                    <div class="top-search-box">
+                        <input v-model="searchQuery" 
+                               class="top-search-input"
+                               placeholder="도서명 또는 저자를 입력하세요..." 
+                               @keyup.enter="searchBooks">
+                        
+                        <button class="top-search-button" @click="searchBooks">검색</button>
+                    </div>
+                    
+                    <div class="top-auth-buttons">
+                        <router-link to="/my-page" class="top-auth-link">마이페이지</router-link>
+                    </div>
+                </div>
+            </div>
+            
             <nav class="navbar">
                 <div class="container">
                     <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
                         📚 독서 인증 플랫폼
                     </div>
                     <div class="navbar-nav">
-                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div v-if="isLoggedIn" class="dropdown">
+                        <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <div class="dropdown">
                             <a class="nav-link">포인트 ▼</a>
                             <div class="dropdown-content">
                                 <router-link to="/points-exchange">포인트 교환소</router-link>
@@ -18,15 +35,7 @@ const MyPage = {
                                 <router-link to="/points-requests">신청 내역</router-link>
                             </div>
                         </div>
-                        <router-link v-if="isLoggedIn" to="/my-page" class="nav-link">마이페이지</router-link>
-                        <template v-if="isLoggedIn">
-                            <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
-                        </template>
-                        <template v-else>
-                            <router-link to="/signup" class="nav-link">회원가입</router-link>
-                            <span style="color: #ddd; padding: 0 8px;">|</span>
-                            <router-link to="/login" class="nav-link">로그인</router-link>
-                        </template>
+                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                     </div>
                 </div>
             </nav>
@@ -87,6 +96,7 @@ const MyPage = {
     `,
     data() {
         return {
+            searchQuery: '',
             user: store.currentUser,
             editForm: {
                 name: store.currentUser.name,
@@ -102,6 +112,16 @@ const MyPage = {
         };
     },
     methods: {
+        searchBooks() {
+            if (!this.searchQuery.trim()) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+            this.$router.push({
+                path: '/search',
+                query: { q: this.searchQuery }
+            });
+        },
         updateProfile() {
             if (this.editForm.nickname !== this.user.nickname) {
                 const users = store.getUsers();
