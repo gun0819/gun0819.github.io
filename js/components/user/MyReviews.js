@@ -90,7 +90,7 @@ const MyReviews = {
     computed: {
         isLoggedIn() {
             return store.currentUser !== null;
-        }
+        },
         myReviews() {
             return store.getReviews()
                 .filter(r => r.userId === store.currentUser.id)
