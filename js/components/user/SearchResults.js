@@ -8,9 +8,9 @@ const SearchResults = {
                         📚 독서 인증 플랫폼
                     </div>
                     <div class="navbar-nav">
-                        <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div class="dropdown">
+                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
+                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                        <div v-if="isLoggedIn" class="dropdown">
                             <a class="nav-link">포인트 ▼</a>
                             <div class="dropdown-content">
                                 <router-link to="/points-exchange">포인트 교환소</router-link>
@@ -18,8 +18,10 @@ const SearchResults = {
                                 <router-link to="/points-requests">신청 내역</router-link>
                             </div>
                         </div>
-                        <router-link to="/my-page" class="nav-link">마이페이지</router-link>
-                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        <router-link v-if="isLoggedIn" to="/my-page" class="nav-link">마이페이지</router-link>
+                        <router-link v-if="!isLoggedIn" to="/signup" class="nav-link">회원가입</router-link>
+                        <router-link v-if="!isLoggedIn" to="/login" class="nav-link">로그인</router-link>
+                        <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
                     </div>
                 </div>
             </nav>
@@ -281,7 +283,7 @@ const SearchResults = {
         },
         logout() {
             store.clearCurrentUser();
-            this.$router.push('/login');
+            this.$router.push('/dashboard');
         }
     }
 };
