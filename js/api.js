@@ -31,10 +31,12 @@ const bookAPI = {
                 author: book.author,
                 isbn: book.isbn13 || book.isbn,
                 genre: book.categoryName ? book.categoryName.split('>').pop().trim() : '일반',
+                categoryName: book.categoryName || '',
                 cover: book.cover,
                 publisher: book.publisher,
                 pubDate: book.pubDate,
-                description: book.description || ''
+                description: book.description || '',
+                link: book.link || ''
             }));
 
         } catch (error) {
@@ -70,16 +72,29 @@ const bookAPI = {
                 author: book.author,
                 isbn: book.isbn13 || book.isbn,
                 genre: book.categoryName ? book.categoryName.split('>').pop().trim() : '일반',
+                categoryName: book.categoryName || '',
                 cover: book.cover,
                 publisher: book.publisher,
                 pubDate: book.pubDate,
                 description: book.description || '',
+                link: book.link || '',
                 rank: index + 1
             }));
 
         } catch (error) {
             console.error('❌ 베스트셀러 에러:', error);
             return [];
+        }
+    },
+    
+    // 도서 상세 정보 가져오기 (ISBN으로)
+    async getBookDetail(isbn) {
+        try {
+            const results = await this.searchAladin(isbn);
+            return results.length > 0 ? results[0] : null;
+        } catch (error) {
+            console.error('❌ 도서 상세 정보 에러:', error);
+            return null;
         }
     }
 };
