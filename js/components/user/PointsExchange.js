@@ -1,4 +1,4 @@
-// 포인트 교환소 컴포넌트
+// 포인트 교환소 컴포넌트 (포인트 조정)
 const PointsExchange = {
     template: `
         <div>
@@ -29,12 +29,21 @@ const PointsExchange = {
                     <h2>포인트 교환소 💎</h2>
                     <div class="point-display">{{ currentPoints }} P</div>
                     
+                    <!-- 월별 한도 안내 -->
+                    <div class="alert-box info" style="margin-bottom: 30px;">
+                        <strong>📌 월별 포인트 한도 안내</strong><br>
+                        • 활동 포인트 (감상문 + 퀴즈): {{ monthlyActivity }} / 10,000P<br>
+                        • 공감 포인트: {{ monthlyLikes }} / 10,000P<br>
+                        • 이번 달 남은 활동 포인트: {{ remainingActivity }}P<br>
+                        • 이번 달 남은 공감 포인트: {{ remainingLikes }}P
+                    </div>
+                    
                     <h3>보상 신청</h3>
                     <div class="card-grid">
                         <div v-for="reward in rewards" :key="reward.id" class="card">
                             <h3>{{ reward.name }}</h3>
                             <p>{{ reward.description }}</p>
-                            <p style="font-size: 24px; color: #667eea; font-weight: bold;">{{ reward.points }} P</p>
+                            <p style="font-size: 24px; color: #667eea; font-weight: bold;">{{ reward.points.toLocaleString() }} P</p>
                             <button @click="requestReward(reward)" 
                                     :disabled="currentPoints < reward.points" 
                                     class="btn btn-sm">
@@ -50,16 +59,34 @@ const PointsExchange = {
         return {
             currentPoints: store.getUserPoints(store.currentUser.email),
             rewards: [
-                { id: 1, name: '스타벅스 아메리카노', description: '따뜻한 커피 한 잔', points: 100 },
-                { id: 2, name: '교보문고 도서상품권', description: '5,000원 상품권', points: 200 },
-                { id: 3, name: '영화 관람권', description: 'CGV 영화 관람권', points: 300 },
-                { id: 4, name: '교보문고 도서상품권', description: '10,000원 상품권', points: 400 }
+                { id: 1, name: '스타벅스 아메리카노', description: '따뜻한 커피 한 잔', points: 4500 },
+                { id: 2, name: '교보문고 도서상품권 5,000원', description: '5,000원 상품권', points: 5000 },
+                { id: 3, name: '교보문고 도서상품권 10,000원', description: '10,000원 상품권', points: 10000 },
+                { id: 4, name: '교보문고 도서상품권 20,000원', description: '20,000원 상품권', points: 20000 },
+                { id: 5, name: '교보문고 도서상품권 30,000원', description: '30,000원 상품권', points: 30000 }
             ]
         };
     },
+    computed: {
+        monthlyPoints() {
+            return store.getMonthlyPoints(store.currentUser.email);
+        },
+        monthlyActivity() {
+            return this.monthlyPoints.activity || 0;
+        },
+        monthlyLikes() {
+            return this.monthlyPoints.likes || 0;
+        },
+        remainingActivity() {
+            return Math.max(0, 10000 - this.monthlyActivity);
+        },
+        remainingLikes() {
+            return Math.max(0, 10000 - this.monthlyLikes);
+        }
+    },
     methods: {
         requestReward(reward) {
-            if (confirm(`${reward.name}을(를) ${reward.points} 포인트로 신청하시겠습니까?`)) {
+            if (confirm(`${reward.name}을(를) ${reward.points.toLocaleString()} 포인트로 신청하시겠습니까?`)) {
                 store.addUserPoints(store.currentUser.email, -reward.points, `보상 신청: ${reward.name}`);
                 this.currentPoints = store.getUserPoints(store.currentUser.email);
                 

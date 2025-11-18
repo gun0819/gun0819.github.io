@@ -1,4 +1,4 @@
-// 검색 결과 페이지 컴포넌트
+// 검색 결과 페이지 컴포넌트 (BookDetail 페이지로 연결)
 const SearchResults = {
    template: `
         <div>
@@ -37,7 +37,6 @@ const SearchResults = {
                                    @keyup.enter="newSearch"
                                    @focus="showAutocomplete = true">
                             
-                            <!-- 자동완성 드롭다운 -->
                             <div v-if="showAutocomplete && autocompleteResults.length > 0" 
                                  class="autocomplete-dropdown">
                                 <div v-if="isAutocompleteLoading" class="autocomplete-loading">
@@ -47,7 +46,7 @@ const SearchResults = {
                                     <div v-for="book in autocompleteResults" 
                                          :key="book.id" 
                                          class="autocomplete-item"
-                                         @click="selectAutocompleteBook(book)">
+                                         @click="goToBookDetail(book)">
                                         <img v-if="book.cover" :src="book.cover" :alt="book.title">
                                         <div v-else style="width: 50px; height: 70px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📚</div>
                                         <div class="autocomplete-item-content">
@@ -96,7 +95,10 @@ const SearchResults = {
                     </div>
                     
                     <div v-else-if="books.length > 0" class="card-grid">
-                        <div v-for="book in books" :key="book.id" class="card" @click="selectBook(book)" style="cursor: pointer;">
+                        <div v-for="book in books" :key="book.id" 
+                             class="card" 
+                             @click="goToBookDetail(book)" 
+                             style="cursor: pointer;">
                             <img v-if="book.cover" :src="book.cover" :alt="book.title" class="book-cover">
                             <div v-else class="book-cover" style="display: flex; align-items: center; justify-content: center; font-size: 48px; background: #f5f5f5;">
                                 📚
@@ -115,29 +117,6 @@ const SearchResults = {
                     </div>
                 </div>
             </div>
-            
-            <div v-if="selectedBook" class="modal-overlay" @click.self="selectedBook = null">
-                <div class="modal">
-                    <img v-if="selectedBook.cover" :src="selectedBook.cover" :alt="selectedBook.title"
-                         style="width: 100%; max-width: 200px; margin: 0 auto 20px; display: block; border-radius: 8px;">
-                    <h3>{{ selectedBook.title }}</h3>
-                    <p><strong>저자:</strong> {{ selectedBook.author }}</p>
-                    <p v-if="selectedBook.publisher"><strong>출판사:</strong> {{ selectedBook.publisher }}</p>
-                    <p v-if="selectedBook.pubDate"><strong>출간일:</strong> {{ selectedBook.pubDate }}</p>
-                    <p v-if="selectedBook.description" style="margin-top: 16px; color: #666; font-size: 14px;">
-                        {{ selectedBook.description.substring(0, 200) }}...
-                    </p>
-                    <div v-if="!isLoggedIn" class="alert-box warning" style="margin-top: 20px;">
-                        감상문 작성과 퀴즈 풀기는 로그인 후 이용 가능합니다.
-                    </div>
-                    <div class="modal-actions">
-                        <button v-if="isLoggedIn" @click="startReview" class="btn btn-sm">감상문 작성</button>
-                        <button v-if="isLoggedIn" @click="startQuiz" class="btn btn-sm">퀴즈 풀기</button>
-                        <button v-if="!isLoggedIn" @click="$router.push('/login')" class="btn btn-sm">로그인하기</button>
-                        <button @click="selectedBook = null" class="btn btn-sm btn-secondary">닫기</button>
-                    </div>
-                </div>
-            </div>
         </div>
     `,
     data() {
@@ -146,9 +125,7 @@ const SearchResults = {
             sortBy: this.$route.query.sort || 'Accuracy',
             books: [],
             isLoading: false,
-            selectedBook: null,
             
-            // 자동완성 관련
             showAutocomplete: false,
             autocompleteResults: [],
             isAutocompleteLoading: false,
@@ -165,7 +142,6 @@ const SearchResults = {
             await this.performSearch();
         }
         
-        // 외부 클릭 시 자동완성 닫기
         document.addEventListener('click', this.handleClickOutside);
     },
     beforeUnmount() {
@@ -182,19 +158,16 @@ const SearchResults = {
             }
         },
         onSearchInput() {
-            // 입력값이 2글자 미만이면 자동완성 숨김
             if (this.searchQuery.length < 2) {
                 this.showAutocomplete = false;
                 this.autocompleteResults = [];
                 return;
             }
             
-            // 이전 타이머 취소
             if (this.autocompleteTimeout) {
                 clearTimeout(this.autocompleteTimeout);
             }
             
-            // 500ms 후에 검색 (debounce)
             this.autocompleteTimeout = setTimeout(async () => {
                 await this.loadAutocomplete();
             }, 500);
@@ -206,7 +179,6 @@ const SearchResults = {
             this.showAutocomplete = true;
             
             try {
-                // 정확도순으로 최대 10개 결과만 가져오기
                 const results = await bookAPI.searchAladin(this.searchQuery, 1, 'Accuracy');
                 this.autocompleteResults = results.slice(0, 10);
             } catch (error) {
@@ -216,10 +188,9 @@ const SearchResults = {
                 this.isAutocompleteLoading = false;
             }
         },
-        selectAutocompleteBook(book) {
-            this.selectedBook = book;
-            this.showAutocomplete = false;
-            this.searchQuery = book.title;
+        goToBookDetail(book) {
+            const bookId = book.isbn || book.id;
+            this.$router.push(`/book/${bookId}`);
         },
         async performSearch() {
             this.isLoading = true;
@@ -251,35 +222,6 @@ const SearchResults = {
             this.sortBy = newSort;
             this.$router.push({ query: { q: this.searchQuery, sort: newSort } });
             await this.performSearch();
-        },
-        selectBook(book) {
-            this.selectedBook = book;
-        },
-        startReview() {
-            if (!this.isLoggedIn) {
-                alert('로그인이 필요합니다.');
-                this.$router.push('/login');
-                return;
-            }
-            const bookId = this.selectedBook.isbn || this.selectedBook.id;
-            if (store.hasReviewForBook(store.currentUser.id, bookId)) {
-                alert('이미 감상문을 제출한 도서입니다.');
-                return;
-            }
-            this.$router.push(`/review/${bookId}`);
-        },
-        startQuiz() {
-            if (!this.isLoggedIn) {
-                alert('로그인이 필요합니다.');
-                this.$router.push('/login');
-                return;
-            }
-            const bookId = this.selectedBook.isbn || this.selectedBook.id;
-            if (store.hasQuizForBook(store.currentUser.id, bookId)) {
-                alert('이미 퀴즈를 푼 책입니다.');
-                return;
-            }
-            this.$router.push(`/quiz/${bookId}`);
         },
         logout() {
             store.clearCurrentUser();
