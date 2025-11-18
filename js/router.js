@@ -1,4 +1,4 @@
-// 라우터 설정
+// 라우터 설정 (BookDetail 라우트 추가)
 const { createRouter, createWebHashHistory } = VueRouter;
 
 const routes = [
@@ -9,6 +9,7 @@ const routes = [
     { path: '/find-password', component: FindPassword },
     { path: '/dashboard', component: UserDashboard },
     { path: '/search', component: SearchResults },
+    { path: '/book/:id', component: BookDetail },  // NEW!
     { path: '/review/:id', component: ReviewWrite },
     { path: '/quiz/:id', component: Quiz },
     { path: '/my-reviews', component: MyReviews },
@@ -33,23 +34,19 @@ const router = createRouter({
 
 // 라우터 가드
 router.beforeEach((to, from, next) => {
-    // 로그인 없이 접근 가능한 페이지
     const publicPages = ['/login', '/signup', '/find-account', '/find-password', '/dashboard', '/search'];
-    const authRequired = !publicPages.includes(to.path);
+    const authRequired = !publicPages.includes(to.path) && !to.path.startsWith('/book/');
     const loggedIn = store.currentUser;
 
-    // 로그인이 필요한 페이지에 로그인 없이 접근 시
     if (authRequired && !loggedIn) {
         return next('/login');
     }
 
-    // 관리자 페이지 접근 제어
     if (to.path.startsWith('/admin') && loggedIn && loggedIn.type !== 'admin') {
         return next('/dashboard');
     }
 
-    // 관리자가 일반 사용자 페이지 접근 시 (로그인, 회원가입, 대시보드, 검색 제외)
-    if (!publicPages.includes(to.path) && !to.path.startsWith('/admin') && loggedIn && loggedIn.type === 'admin') {
+    if (!publicPages.includes(to.path) && !to.path.startsWith('/admin') && !to.path.startsWith('/book/') && loggedIn && loggedIn.type === 'admin') {
         return next('/admin');
     }
 
