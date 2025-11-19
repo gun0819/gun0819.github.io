@@ -1007,3 +1007,391 @@ td.clickable:hover {
         flex: 0 0 150px;
     }
 }
+
+/* 도서 상세 페이지 */
+.book-detail-container {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.book-info-section {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 40px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.book-info-left {
+    flex-shrink: 0;
+}
+
+.book-detail-cover {
+    width: 280px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.book-info-right {
+    flex: 1;
+    min-width: 0;
+}
+
+.book-detail-title {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.book-detail-meta p {
+    margin: 8px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+.book-rating-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.rating-stars {
+    font-size: 24px;
+}
+
+.rating-number {
+    font-size: 32px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.rating-count {
+    font-size: 14px;
+    color: #666;
+}
+
+.book-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+}
+
+.book-description-section {
+    margin: 40px 0;
+    padding: 30px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.book-description-text {
+    line-height: 1.8;
+    color: #333;
+    font-size: 16px;
+}
+
+/* 한줄 평 섹션 */
+.oneline-reviews-section {
+    margin: 40px 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.sort-btn {
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.sort-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.sort-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.oneline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.oneline-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    transition: box-shadow 0.3s;
+}
+
+.oneline-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.oneline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.oneline-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.oneline-nickname {
+    font-weight: 600;
+    color: #333;
+}
+
+.oneline-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.oneline-rating {
+    font-size: 18px;
+}
+
+.oneline-content {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 16px;
+    line-height: 1.6;
+}
+
+.oneline-footer {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.like-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.like-btn:hover:not(:disabled) {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.like-btn.liked {
+    background: #fff5f5;
+    border-color: #ff6b6b;
+    color: #ff6b6b;
+}
+
+.like-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.view-review-btn {
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #667eea;
+    color: #667eea;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.view-review-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+/* 퀴즈 섹션 */
+.user-quizzes-section {
+    margin: 40px 0;
+}
+
+.quiz-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.quiz-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.quiz-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.quiz-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.quiz-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.quiz-creator {
+    font-size: 12px;
+    color: #666;
+}
+
+.quiz-info {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+/* 댓글 섹션 */
+.comments-section {
+    margin-top: 40px;
+    padding-top: 40px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.comment-input {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.comment-input textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: vertical;
+}
+
+.comment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.comment-card {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.comment-author {
+    font-weight: 600;
+    color: #333;
+}
+
+.comment-date {
+    font-size: 12px;
+    color: #999;
+}
+
+.comment-content {
+    color: #333;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+/* 퀴즈 작성 UI */
+.quiz-creation-section {
+    margin-top: 24px;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 2px dashed #667eea;
+}
+
+.quiz-question-item {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.quiz-options-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .book-info-section {
+        flex-direction: column;
+    }
+    
+    .book-detail-cover {
+        width: 100%;
+        max-width: 280px;
+        margin: 0 auto;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .quiz-list {
+        grid-template-columns: 1fr;
+    }
+}
