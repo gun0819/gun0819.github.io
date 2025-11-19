@@ -16,7 +16,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -280,6 +280,48 @@ body {
     white-space: nowrap;
 }
 
+/* 헤더 검색바 스타일 */
+.navbar-search {
+    display: flex;
+    align-items: center;
+    background: #f5f6f8;
+    border-radius: 24px;
+    padding: 6px 12px;
+    flex: 1;
+    max-width: 600px;
+}
+
+.navbar-search-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    outline: none;
+}
+
+.navbar-search-button {
+    padding: 8px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    white-space: nowrap;
+}
+
+.navbar-search-button:hover {
+    background: #5568d3;
+}
+
+.navbar-search-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 .navbar-nav {
     display: flex;
     gap: 8px;
@@ -328,62 +370,6 @@ body {
 
 .navbar-auth-separator {
     color: #ddd;
-}
-
-/* 상단 검색 바 (navbar 아래) */
-.top-search-bar {
-    background: white;
-    padding: 16px 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.top-search-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.top-search-box {
-    position: relative;
-    display: flex;
-    align-items: center;
-    background: #f5f6f8;
-    border-radius: 24px;
-    padding: 8px 16px;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.top-search-input {
-    flex: 1;
-    padding: 8px 12px;
-    border: none;
-    background: transparent;
-    font-size: 15px;
-    outline: none;
-}
-
-.top-search-button {
-    padding: 8px 20px;
-    background: #667eea;
-    color: white;
-    border: none;
-    border-radius: 16px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.3s;
-    white-space: nowrap;
-}
-
-.top-search-button:hover {
-    background: #5568d3;
-}
-
-.top-search-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
 }
 
 /* 드롭다운 메뉴 */
@@ -462,6 +448,8 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .bestseller-header h3 {
@@ -960,54 +948,6 @@ td.clickable:hover {
     color: #666;
 }
 
-/* 반응형 */
-@media (max-width: 768px) {
-    .navbar-content {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .navbar-left {
-        flex-direction: column;
-        width: 100%;
-        gap: 12px;
-    }
-    
-    .navbar-brand {
-        text-align: center;
-    }
-    
-    .navbar-nav {
-        justify-content: center;
-        width: 100%;
-    }
-    
-    .navbar-auth {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .top-search-box {
-        max-width: 100%;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .card-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .bestseller-filters {
-        justify-content: center;
-    }
-
-    .book-card {
-        flex: 0 0 150px;
-    }
-}
-
 /* 도서 상세 페이지 */
 .book-detail-container {
     background: white;
@@ -1376,6 +1316,52 @@ td.clickable:hover {
 
 /* 반응형 */
 @media (max-width: 768px) {
+    .navbar-content {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .navbar-left {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+    }
+    
+    .navbar-brand {
+        text-align: center;
+    }
+    
+    .navbar-search {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .navbar-nav {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .navbar-auth {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bestseller-filters {
+        justify-content: center;
+    }
+
+    .book-card {
+        flex: 0 0 150px;
+    }
+    
     .book-info-section {
         flex-direction: column;
     }
