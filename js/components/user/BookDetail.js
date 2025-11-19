@@ -4,24 +4,41 @@ const BookDetail = {
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                        📚 독서 인증 플랫폼
-                    </div>
-                    <div class="navbar-nav">
-                        <router-link v-if="isLoggedIn" to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link v-if="isLoggedIn" to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div v-if="isLoggedIn" class="dropdown">
-                            <a class="nav-link">포인트 ▼</a>
-                            <div class="dropdown-content">
-                                <router-link to="/points-exchange">포인트 교환소</router-link>
-                                <router-link to="/points-history">적립 내역</router-link>
-                                <router-link to="/points-requests">신청 내역</router-link>
+                    <div class="navbar-content">
+                        <div class="navbar-left">
+                            <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                                📚 독서 인증 플랫폼
+                            </div>
+                            
+                            <!-- 통합 검색바 -->
+                            <div class="navbar-search">
+                                <input v-model="headerSearchQuery" 
+                                       class="navbar-search-input"
+                                       placeholder="도서 검색..." 
+                                       @keyup.enter="headerSearch">
+                                <button class="navbar-search-button" @click="headerSearch">검색</button>
                             </div>
                         </div>
-                        <router-link v-if="isLoggedIn" to="/my-page" class="nav-link">마이페이지</router-link>
-                        <router-link v-if="!isLoggedIn" to="/signup" class="nav-link">회원가입</router-link>
-                        <router-link v-if="!isLoggedIn" to="/login" class="nav-link">로그인</router-link>
-                        <a v-if="isLoggedIn" href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        
+                        <div v-if="isLoggedIn" class="navbar-nav">
+                            <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                            <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                            <div class="dropdown">
+                                <a class="nav-link">포인트 ▼</a>
+                                <div class="dropdown-content">
+                                    <router-link to="/points-exchange">포인트 교환소</router-link>
+                                    <router-link to="/points-history">적립 내역</router-link>
+                                    <router-link to="/points-requests">신청 내역</router-link>
+                                </div>
+                            </div>
+                            <router-link to="/my-page" class="nav-link">마이페이지</router-link>
+                            <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        </div>
+                        
+                        <div v-else class="navbar-nav">
+                            <router-link to="/signup" class="nav-link">회원가입</router-link>
+                            <router-link to="/login" class="nav-link">로그인</router-link>
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -187,7 +204,8 @@ const BookDetail = {
             isLoading: true,
             sortType: 'likes',
             reviews: [],
-            onelineReviews: []
+            onelineReviews: [],
+            headerSearchQuery: ''
         };
     },
     computed: {
@@ -243,6 +261,16 @@ const BookDetail = {
         this.loadReviews();
     },
     methods: {
+        headerSearch() {
+            if (!this.headerSearchQuery.trim()) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+            this.$router.push({
+                path: '/search',
+                query: { q: this.headerSearchQuery }
+            });
+        },
         async loadBookDetail() {
             this.isLoading = true;
             try {

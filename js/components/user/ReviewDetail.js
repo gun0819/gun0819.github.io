@@ -4,25 +4,40 @@ const ReviewDetail = {
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                        📚 독서 인증 플랫폼
-                    </div>
-                    <div class="navbar-nav">
-                        <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div class="dropdown">
-                            <a class="nav-link">포인트 ▼</a>
-                            <div class="dropdown-content">
-                                <router-link to="/points-exchange">포인트 교환소</router-link>
-                                <router-link to="/points-history">적립 내역</router-link>
-                                <router-link to="/points-requests">신청 내역</router-link>
+                    <div class="navbar-content">
+                        <div class="navbar-left">
+                            <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                                📚 독서 인증 플랫폼
+                            </div>
+                            
+                            <!-- 통합 검색바 -->
+                            <div class="navbar-search">
+                                <input v-model="headerSearchQuery" 
+                                       class="navbar-search-input"
+                                       placeholder="도서 검색..." 
+                                       @keyup.enter="headerSearch">
+                                <button class="navbar-search-button" @click="headerSearch">검색</button>
                             </div>
                         </div>
-                        <router-link to="/my-page" class="nav-link">마이페이지</router-link>
-                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        
+                        <div class="navbar-nav">
+                            <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                            <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                            <div class="dropdown">
+                                <a class="nav-link">포인트 ▼</a>
+                                <div class="dropdown-content">
+                                    <router-link to="/points-exchange">포인트 교환소</router-link>
+                                    <router-link to="/points-history">적립 내역</router-link>
+                                    <router-link to="/points-requests">신청 내역</router-link>
+                                </div>
+                            </div>
+                            <router-link to="/my-page" class="nav-link">마이페이지</router-link>
+                            <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        </div>
                     </div>
                 </div>
             </nav>
+            
             <div class="container">
                 <div class="dashboard">
                     <div class="back-button">
@@ -58,38 +73,41 @@ const ReviewDetail = {
                             <strong>⚠️ 반려 사유:</strong> {{ review.rejectionReason }}
                         </div>
                         
-                        <!-- 한줄 평 (항상 표시) -->
-                        <div class="detail-content" style="margin-top: 20px; background: #f8f9fa; padding: 16px; border-radius: 8px;">
-                            <h4 style="margin-bottom: 12px;">💬 한줄 평</h4>
-                            <p style="font-size: 16px; color: #333;">{{ review.onelineReview }}</p>
-                            <button v-if="review.status === 'approved'"
-                                    @click="toggleLike('oneline', review.id, review.userId)" 
-                                    :class="['like-btn', {liked: hasLiked('oneline', review.id)}]"
-                                    :disabled="!isLoggedIn || review.userId === currentUserId"
-                                    style="margin-top: 12px;">
-                                {{ hasLiked('oneline', review.id) ? '❤️' : '🤍' }}
-                                {{ getLikeCount('oneline', review.id) }}
-                            </button>
+                        <!-- 한줄 평 (배경색 수정) -->
+                        <div style="margin-top: 30px;">
+                            <h3 style="margin-bottom: 15px;">💬 한줄 평</h3>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; flex: 1;">
+                                    <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 0; white-space: pre-wrap;">{{ review.onelineReview }}</p>
+                                </div>
+                                <button v-if="review.status === 'approved'"
+                                        @click="toggleLike('oneline', review.id, review.userId)" 
+                                        :class="['like-btn', {liked: hasLiked('oneline', review.id)}]"
+                                        :disabled="!isLoggedIn || review.userId === currentUserId">
+                                    {{ hasLiked('oneline', review.id) ? '❤️' : '🤍' }}
+                                    {{ getLikeCount('oneline', review.id) }}
+                                </button>
+                            </div>
                         </div>
                         
                         <!-- 감상문 본문 (공개인 경우만) -->
-                        <div v-if="review.isPublic || isMyReview" class="detail-content" style="margin-top: 30px;">
+                        <div v-if="review.isPublic || isMyReview" style="margin-top: 30px;">
                             <h3 style="margin-bottom: 15px;">📝 감상문 내용</h3>
-                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; line-height: 1.8;">
-                                <p style="white-space: pre-wrap;">{{ review.content }}</p>
+                            <div style="display: flex; align-items: flex-start; gap: 16px;">
+                                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; flex: 1;">
+                                    <p style="font-size: 16px; color: #333; line-height: 1.8; margin: 0; white-space: pre-wrap;">{{ review.content }}</p>
+                                </div>
+                                <button v-if="review.status === 'approved' && review.isPublic"
+                                        @click="toggleLike('review', review.id, review.userId)" 
+                                        :class="['like-btn', {liked: hasLiked('review', review.id)}]"
+                                        :disabled="!isLoggedIn || review.userId === currentUserId">
+                                    {{ hasLiked('review', review.id) ? '❤️' : '🤍' }}
+                                    {{ getLikeCount('review', review.id) }}
+                                </button>
                             </div>
                             <p style="text-align: right; color: #666; font-size: 14px; margin-top: 8px;">
                                 {{ review.content.length }}자
                             </p>
-                            
-                            <button v-if="review.status === 'approved' && review.isPublic"
-                                    @click="toggleLike('review', review.id, review.userId)" 
-                                    :class="['like-btn', {liked: hasLiked('review', review.id)}]"
-                                    :disabled="!isLoggedIn || review.userId === currentUserId"
-                                    style="margin-top: 16px;">
-                                {{ hasLiked('review', review.id) ? '❤️' : '🤍' }}
-                                {{ getLikeCount('review', review.id) }}
-                            </button>
                         </div>
                         
                         <div v-else-if="review.status === 'approved'" class="alert-box info" style="margin-top: 30px;">
@@ -173,7 +191,8 @@ const ReviewDetail = {
             reviewId: this.$route.params.id,
             review: null,
             commentText: '',
-            comments: []
+            comments: [],
+            headerSearchQuery: ''
         };
     },
     computed: {
@@ -199,6 +218,16 @@ const ReviewDetail = {
         }
     },
     methods: {
+        headerSearch() {
+            if (!this.headerSearchQuery.trim()) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+            this.$router.push({
+                path: '/search',
+                query: { q: this.headerSearchQuery }
+            });
+        },
         loadComments() {
             this.comments = store.getCommentsByReview(this.reviewId);
         },

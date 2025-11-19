@@ -4,25 +4,40 @@ const ReviewWrite = {
         <div>
             <nav class="navbar">
                 <div class="container">
-                    <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
-                        📚 독서 인증 플랫폼
-                    </div>
-                    <div class="navbar-nav">
-                        <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
-                        <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
-                        <div class="dropdown">
-                            <a class="nav-link">포인트 ▼</a>
-                            <div class="dropdown-content">
-                                <router-link to="/points-exchange">포인트 교환소</router-link>
-                                <router-link to="/points-history">적립 내역</router-link>
-                                <router-link to="/points-requests">신청 내역</router-link>
+                    <div class="navbar-content">
+                        <div class="navbar-left">
+                            <div class="navbar-brand" @click="$router.push('/dashboard')" style="cursor: pointer;">
+                                📚 독서 인증 플랫폼
+                            </div>
+                            
+                            <!-- 통합 검색바 -->
+                            <div class="navbar-search">
+                                <input v-model="headerSearchQuery" 
+                                       class="navbar-search-input"
+                                       placeholder="도서 검색..." 
+                                       @keyup.enter="headerSearch">
+                                <button class="navbar-search-button" @click="headerSearch">검색</button>
                             </div>
                         </div>
-                        <router-link to="/my-page" class="nav-link">마이페이지</router-link>
-                        <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        
+                        <div class="navbar-nav">
+                            <router-link to="/my-reviews" class="nav-link">내 감상문</router-link>
+                            <router-link to="/completed-quizzes" class="nav-link">내 퀴즈</router-link>
+                            <div class="dropdown">
+                                <a class="nav-link">포인트 ▼</a>
+                                <div class="dropdown-content">
+                                    <router-link to="/points-exchange">포인트 교환소</router-link>
+                                    <router-link to="/points-history">적립 내역</router-link>
+                                    <router-link to="/points-requests">신청 내역</router-link>
+                                </div>
+                            </div>
+                            <router-link to="/my-page" class="nav-link">마이페이지</router-link>
+                            <a href="#" @click.prevent="logout" class="nav-link">로그아웃</a>
+                        </div>
                     </div>
                 </div>
             </nav>
+            
             <div class="container">
                 <div class="dashboard">
                     <div v-if="isLoading" class="loading-container">
@@ -79,20 +94,6 @@ const ReviewWrite = {
                             • 신중하게 작성해주세요!
                         </div>
 
-                        <!-- 별점 (0점 시작) -->
-                        <div class="form-group">
-                            <label>별점 (필수) *</label>
-                            <div style="font-size: 32px;">
-                                <span v-for="i in 5" :key="i" @click="rating = i" style="cursor: pointer;">
-                                    {{ i <= rating ? '⭐' : '☆' }}
-                                </span>
-                            </div>
-                            <p v-if="rating === 0" class="error">별점을 선택해주세요.</p>
-                            <p v-else style="color: #666; font-size: 14px; margin-top: 8px;">
-                                {{ rating }}점 / 5점
-                            </p>
-                        </div>
-
                         <!-- 한줄 평 (무조건 공개) -->
                         <div class="form-group">
                             <label>한줄 평 (필수) * ⚠️ 무조건 공개됩니다</label>
@@ -122,24 +123,42 @@ const ReviewWrite = {
                             </p>
                         </div>
 
-                        <!-- 공개/비공개 설정 -->
+                        <!-- 별점 (감상문 작성 칸 아래로 이동) -->
                         <div class="form-group">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" v-model="isPublic">
-                                <span>감상문 전체 내용 공개하기</span>
-                            </label>
-                            <p class="info">
+                            <label>별점 (필수) *</label>
+                            <div style="font-size: 32px;">
+                                <span v-for="i in 5" :key="i" @click="rating = i" style="cursor: pointer;">
+                                    {{ i <= rating ? '⭐' : '☆' }}
+                                </span>
+                            </div>
+                            <p v-if="rating === 0" class="error">별점을 선택해주세요.</p>
+                            <p v-else style="color: #666; font-size: 14px; margin-top: 8px;">
+                                {{ rating }}점 / 5점
+                            </p>
+                        </div>
+
+                        <!-- 공개/비공개 설정 (레이아웃 개선) -->
+                        <div class="form-group">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" v-model="isPublic" id="publicCheckbox" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                                <label for="publicCheckbox" style="margin: 0; cursor: pointer; font-weight: 600; font-size: 16px;">
+                                    감상문 공개하기
+                                </label>
+                            </div>
+                            <p class="info" style="margin-top: 8px; margin-left: 26px;">
                                 체크 해제 시 감상문 본문은 비공개되지만, 한줄 평과 별점은 무조건 공개됩니다.
                             </p>
                         </div>
 
-                        <!-- 퀴즈 작성 옵션 -->
+                        <!-- 퀴즈 작성 옵션 (레이아웃 개선) -->
                         <div class="form-group" style="margin-top: 40px;">
-                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" v-model="wantToCreateQuiz">
-                                <span><strong>다른 사용자를 위해 퀴즈를 만들어주시겠어요? 🎯</strong></span>
-                            </label>
-                            <p class="info">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" v-model="wantToCreateQuiz" id="quizCheckbox" style="width: 18px; height: 18px; margin: 0; cursor: pointer;">
+                                <label for="quizCheckbox" style="margin: 0; cursor: pointer; font-weight: 600; font-size: 16px;">
+                                    다른 사용자를 위해 퀴즈를 만들어주시겠어요? 🎯
+                                </label>
+                            </div>
+                            <p class="info" style="margin-top: 8px; margin-left: 26px;">
                                 퀴즈를 만들면 다른 사용자들이 이 책을 더 깊이 이해하는 데 도움이 됩니다!
                             </p>
                         </div>
@@ -273,6 +292,7 @@ const ReviewWrite = {
             rating: 0,
             isPublic: true,
             isLoading: true,
+            headerSearchQuery: '',
             
             // 퀴즈 작성
             wantToCreateQuiz: false,
@@ -327,6 +347,16 @@ const ReviewWrite = {
         this.isLoading = false;
     },
     methods: {
+        headerSearch() {
+            if (!this.headerSearchQuery.trim()) {
+                alert('검색어를 입력해주세요.');
+                return;
+            }
+            this.$router.push({
+                path: '/search',
+                query: { q: this.headerSearchQuery }
+            });
+        },
         async loadBook() {
             try {
                 const results = await bookAPI.searchAladin(this.bookId);
