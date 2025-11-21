@@ -152,15 +152,8 @@ const bestsellers = await bookAPI.getBestseller('Bestseller');
 
 ## 📝 TODO
 
-현재 간소화된 버전인 컴포넌트들:
-
-- [ ] ReviewWrite.js - 감상문 작성 기능 완성
-- [ ] Quiz.js - 퀴즈 풀기 기능 완성
-- [ ] MyPage.js - 마이페이지 기능 완성
-- [ ] PointsExchange.js - 포인트 교환 기능 완성
-- [ ] PointsHistory.js - 포인트 내역 기능 완성
-- [ ] PointsRequests.js - 포인트 신청 내역 완성
-- [ ] Admin 컴포넌트들 - 관리자 기능 완성
+- 실독 여부 확인 알고리즘 도입
+- OAUTH2 기반 로그인 기능 도입
 
 ## 🎨 스타일 커스터마이징
 
