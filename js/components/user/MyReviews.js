@@ -42,20 +42,33 @@ const MyReviews = {
                 <div class="dashboard">
                     <h2>작성한 감상문 📝</h2>
                     
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 20px; flex-wrap: wrap;">
-                        <button @click="$router.push('/dashboard')" class="btn btn-sm">+ 새로운 감상문 작성하기</button>
-                        
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
                         <!-- 감상문 검색 -->
-                        <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                             <select v-model="searchType" style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px;">
                                 <option value="title">도서명</option>
-                                <option value="date">작성일</option>
+                                <option value="dateRange">작성일 범위</option>
                             </select>
-                            <input v-model="searchQuery" 
+                            
+                            <!-- 도서명 검색 -->
+                            <input v-if="searchType === 'title'"
+                                   v-model="searchQuery" 
                                    type="text" 
-                                   :placeholder="searchType === 'title' ? '도서명 검색...' : '날짜 검색 (예: 2024)'"
+                                   placeholder="도서명 검색..."
                                    style="padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 8px; min-width: 200px;">
-                            <button @click="searchQuery = ''" class="btn btn-sm btn-secondary">초기화</button>
+                            
+                            <!-- 날짜 범위 검색 -->
+                            <div v-else style="display: flex; gap: 8px; align-items: center;">
+                                <input v-model="startDate" 
+                                       type="date" 
+                                       style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                                <span>~</span>
+                                <input v-model="endDate" 
+                                       type="date" 
+                                       style="padding: 8px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                            </div>
+                            
+                            <button @click="resetSearch" class="btn btn-sm btn-secondary">초기화</button>
                         </div>
                     </div>
                     
@@ -112,10 +125,10 @@ const MyReviews = {
                         </div>
                     </div>
                     
-                    <div v-else-if="searchQuery" style="text-align: center; padding: 60px 20px; color: #666;">
+                    <div v-else-if="searchQuery || startDate || endDate" style="text-align: center; padding: 60px 20px; color: #666;">
                         <div style="font-size: 64px; margin-bottom: 16px;">🔍</div>
                         <h3 style="margin-bottom: 12px; color: #333;">검색 결과가 없습니다</h3>
-                        <p>다른 검색어로 다시 시도해보세요.</p>
+                        <p>다른 검색 조건으로 다시 시도해보세요.</p>
                     </div>
                     
                     <div v-else style="text-align: center; padding: 60px 20px; color: #666;">
@@ -132,7 +145,9 @@ const MyReviews = {
         return {
             headerSearchQuery: '',
             searchQuery: '',
-            searchType: 'title'
+            searchType: 'title',
+            startDate: '',
+            endDate: ''
         };
     },
     computed: {
@@ -142,18 +157,29 @@ const MyReviews = {
                 .sort((a, b) => b.id - a.id);
         },
         filteredReviews() {
-            if (!this.searchQuery.trim()) {
-                return this.myReviews;
+            let filtered = this.myReviews;
+            
+            if (this.searchType === 'title' && this.searchQuery.trim()) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(review => 
+                    review.book.title.toLowerCase().includes(query)
+                );
+            } else if (this.searchType === 'dateRange' && (this.startDate || this.endDate)) {
+                filtered = filtered.filter(review => {
+                    const reviewDate = this.parseKoreanDate(review.date);
+                    if (!reviewDate) return false;
+                    
+                    const start = this.startDate ? new Date(this.startDate) : null;
+                    const end = this.endDate ? new Date(this.endDate) : null;
+                    
+                    if (start && reviewDate < start) return false;
+                    if (end && reviewDate > end) return false;
+                    
+                    return true;
+                });
             }
             
-            const query = this.searchQuery.toLowerCase();
-            return this.myReviews.filter(review => {
-                if (this.searchType === 'title') {
-                    return review.book.title.toLowerCase().includes(query);
-                } else {
-                    return review.date.includes(query);
-                }
-            });
+            return filtered;
         }
     },
     methods: {
@@ -166,6 +192,26 @@ const MyReviews = {
                 path: '/search',
                 query: { q: this.headerSearchQuery }
             });
+        },
+        parseKoreanDate(dateStr) {
+            // "2024. 1. 15." 형식을 Date 객체로 변환
+            try {
+                const parts = dateStr.replace(/\./g, '').trim().split(' ').filter(p => p);
+                if (parts.length >= 3) {
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]) - 1;
+                    const day = parseInt(parts[2]);
+                    return new Date(year, month, day);
+                }
+            } catch (e) {
+                console.error('날짜 파싱 오류:', e);
+            }
+            return null;
+        },
+        resetSearch() {
+            this.searchQuery = '';
+            this.startDate = '';
+            this.endDate = '';
         },
         getStatusText(status) {
             const statusMap = {

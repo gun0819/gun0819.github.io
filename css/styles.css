@@ -1026,11 +1026,18 @@ td.clickable:hover {
     flex-wrap: wrap;
 }
 
-.book-description-section {
+/* 섹션 컨테이너 (책 소개, 한줄 평, 퀴즈) */
+.section-container {
     margin: 40px 0;
     padding: 30px;
     background: #f8f9fa;
     border-radius: 12px;
+}
+
+.section-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
 }
 
 .book-description-text {
@@ -1040,15 +1047,19 @@ td.clickable:hover {
 }
 
 /* 한줄 평 섹션 */
-.oneline-reviews-section {
-    margin: 40px 0;
-}
-
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 22px;
+    color: #333;
 }
 
 .sort-buttons {
@@ -1077,13 +1088,13 @@ td.clickable:hover {
     border-color: #667eea;
 }
 
-.oneline-list {
+.review-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.oneline-card {
+.review-item {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
@@ -1091,107 +1102,109 @@ td.clickable:hover {
     transition: box-shadow 0.3s;
 }
 
-.oneline-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.review-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.oneline-header {
+.review-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.oneline-user-info {
+.review-user-info {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-wrap: wrap;
 }
 
-.oneline-nickname {
+.review-nickname {
     font-weight: 600;
     color: #333;
+    font-size: 15px;
 }
 
-.oneline-date {
-    font-size: 12px;
+.review-rating {
+    font-size: 16px;
+}
+
+.review-date {
+    font-size: 13px;
     color: #999;
 }
 
-.oneline-rating {
-    font-size: 18px;
-}
-
-.oneline-content {
+.review-content {
     font-size: 16px;
     color: #333;
     margin-bottom: 16px;
     line-height: 1.6;
 }
 
-.oneline-footer {
+.review-footer {
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
-.like-btn {
-    display: flex;
+/* 상호작용 버튼 (공감, 댓글) */
+.interaction-btn {
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 12px;
+    padding: 8px 16px;
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 20px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s;
+    color: #666;
 }
 
-.like-btn:hover:not(:disabled) {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
+.interaction-btn:hover:not(:disabled) {
+    border-color: #667eea;
+    color: #667eea;
 }
 
-.like-btn.liked {
+.interaction-btn.active {
     background: #fff5f5;
     border-color: #ff6b6b;
     color: #ff6b6b;
 }
 
-.like-btn:disabled {
+.interaction-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.view-review-btn {
+.interaction-btn.small {
     padding: 6px 12px;
-    background: white;
-    border: 1px solid #667eea;
-    color: #667eea;
-    border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.3s;
+    font-size: 13px;
 }
 
-.view-review-btn:hover {
-    background: #667eea;
-    color: white;
+.interaction-btn .icon {
+    font-size: 16px;
 }
 
-/* 퀴즈 섹션 */
-.user-quizzes-section {
-    margin: 40px 0;
+.interaction-btn .count {
+    font-weight: 600;
 }
 
-.quiz-list {
+.interaction-btn .text {
+    font-weight: 500;
+}
+
+/* 퀴즈 그리드 */
+.quiz-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
-.quiz-card {
+.quiz-item {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
@@ -1199,27 +1212,22 @@ td.clickable:hover {
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.quiz-card:hover {
+.quiz-item:hover {
     transform: translateY(-4px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.quiz-card-header {
+.quiz-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.quiz-card-header h3 {
+.quiz-header h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 16px;
     color: #333;
-}
-
-.quiz-creator {
-    font-size: 12px;
-    color: #666;
 }
 
 .quiz-info {
@@ -1377,7 +1385,7 @@ td.clickable:hover {
         gap: 16px;
     }
     
-    .quiz-list {
+    .quiz-grid {
         grid-template-columns: 1fr;
     }
 }

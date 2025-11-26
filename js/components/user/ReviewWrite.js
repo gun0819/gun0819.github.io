@@ -1,4 +1,4 @@
-// 감상문 작성 컴포넌트 (대폭 수정 - 한줄평, 퀴즈, 공개/비공개)
+// 감상문 작성 컴포넌트 (서술형 제거)
 const ReviewWrite = {
     template: `
         <div>
@@ -167,7 +167,7 @@ const ReviewWrite = {
                         <div v-if="wantToCreateQuiz" class="quiz-creation-section">
                             <h3>📝 퀴즈 만들기</h3>
                             <p style="color: #666; margin-bottom: 20px;">
-                                객관식, 주관식, 서술형 문제를 자유롭게 만들어보세요.
+                                객관식, 주관식 문제를 자유롭게 만들어보세요.
                             </p>
 
                             <div class="form-group">
@@ -175,7 +175,6 @@ const ReviewWrite = {
                                 <select v-model="currentQuizType" style="width: 200px;">
                                     <option value="multiple">객관식</option>
                                     <option value="short">주관식</option>
-                                    <option value="essay">서술형</option>
                                 </select>
                             </div>
 
@@ -213,16 +212,14 @@ const ReviewWrite = {
                                 </button>
                             </div>
 
-                            <!-- 주관식/서술형 정답 -->
+                            <!-- 주관식 정답 -->
                             <div v-else class="form-group">
-                                <label>{{ currentQuizType === 'short' ? '정답' : '예시 답안' }}</label>
+                                <label>정답</label>
                                 <textarea v-model="currentAnswerText"
-                                          :rows="currentQuizType === 'essay' ? 5 : 2"
-                                          :placeholder="currentQuizType === 'short' ? '정답을 입력하세요' : '예시 답안을 입력하세요'"></textarea>
+                                          rows="2"
+                                          placeholder="정답을 입력하세요"></textarea>
                                 <p class="info">
-                                    {{ currentQuizType === 'short' ? 
-                                       '주관식은 정확한 정답을 입력해주세요.' : 
-                                       '서술형은 예시 답안만 제공됩니다. 다른 사용자가 스스로 채점합니다.' }}
+                                    주관식은 정확한 정답을 입력해주세요.
                                 </p>
                             </div>
 
@@ -247,7 +244,7 @@ const ReviewWrite = {
                                                 정답: {{ q.options[q.answer] }}
                                             </p>
                                             <p v-else style="font-size: 14px; color: #666; margin-top: 8px;">
-                                                {{ q.type === 'short' ? '정답: ' : '예시 답안: ' }}{{ q.answerText }}
+                                                정답: {{ q.answerText }}
                                             </p>
                                         </div>
                                         <button @click="removeQuizQuestion(idx)" 
@@ -494,7 +491,7 @@ const ReviewWrite = {
                 question.answer = this.currentAnswer;
             } else {
                 if (!this.currentAnswerText.trim()) {
-                    alert(this.currentQuizType === 'short' ? '정답을 입력해주세요.' : '예시 답안을 입력해주세요.');
+                    alert('정답을 입력해주세요.');
                     return;
                 }
                 question.answerText = this.currentAnswerText;
@@ -515,8 +512,7 @@ const ReviewWrite = {
         getQuizTypeName(type) {
             const names = {
                 'multiple': '객관식',
-                'short': '주관식',
-                'essay': '서술형'
+                'short': '주관식'
             };
             return names[type] || type;
         },

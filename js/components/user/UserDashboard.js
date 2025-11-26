@@ -10,8 +10,8 @@ const UserDashboard = {
                                 📚 독서 인증 플랫폼
                             </div>
                             
-                            <!-- 통합 검색바 -->
-                            <div class="navbar-search">
+                            <!-- 통합 검색바 (위치 조정) -->
+                            <div class="navbar-search" style="margin-right: auto;">
                                 <input v-model="headerSearchQuery" 
                                        class="navbar-search-input"
                                        placeholder="도서 검색..." 
@@ -91,17 +91,17 @@ const UserDashboard = {
                         <p>도서 목록을 불러오는 중...</p>
                     </div>
                     
-                    <div v-else-if="filteredBooks.length > 0" class="bestseller-slider" 
+                    <div v-else-if="displayedBooks.length > 0" class="bestseller-slider" 
                          @wheel="handleWheel" 
                          ref="sliderContainer"
                          style="position: relative; overflow: hidden; padding: 20px 0;">
                         <div class="slider-nav prev" @click="prevSlide">‹</div>
                         <div class="bestseller-track" :style="{transform: 'translateX(' + slideOffset + 'px)'}">
-                            <div v-for="book in filteredBooks" :key="book.id" class="book-card" @click="goToBookDetail(book)">
+                            <div v-for="(book, index) in displayedBooks" :key="book.id" class="book-card" @click="goToBookDetail(book)">
                                 <div style="position: relative;">
                                     <img v-if="book.cover" :src="book.cover" :alt="book.title" class="book-card-cover">
                                     <div v-else class="book-card-cover" style="display: flex; align-items: center; justify-content: center; font-size: 48px; background: #f5f5f5;">📚</div>
-                                    <div v-if="book.rank" class="book-card-rank">{{ book.rank }}</div>
+                                    <div class="book-card-rank">{{ index + 1 }}</div>
                                 </div>
                                 <div class="book-card-title">{{ book.title }}</div>
                                 <div class="book-card-author">{{ book.author }}</div>
@@ -127,7 +127,8 @@ const UserDashboard = {
             
             currentTimeFilter: 'bestseller',
             currentCategoryFilter: 'all',
-            currentBooks: [],
+            allBooks: [],  // 전체 책 목록
+            categoryBooks: {},  // 분야별 책 목록 {소설: [...], 경제: [...]}
             isLoadingBestseller: false,
             slideOffset: 0,
             slideIndex: 0,
@@ -143,15 +144,11 @@ const UserDashboard = {
             const categoryName = this.currentCategoryFilter === 'all' ? '' : ` - ${this.currentCategoryFilter}`;
             return timeName + categoryName;
         },
-        filteredBooks() {
+        displayedBooks() {
             if (this.currentCategoryFilter === 'all') {
-                return this.currentBooks;
+                return this.allBooks.slice(0, 50);
             }
-            
-            return this.currentBooks.filter(book => {
-                if (!book.genre) return false;
-                return book.genre.includes(this.currentCategoryFilter);
-            });
+            return this.categoryBooks[this.currentCategoryFilter] || [];
         }
     },
     async mounted() {
@@ -190,14 +187,32 @@ const UserDashboard = {
         async loadBestsellers() {
             this.isLoadingBestseller = true;
             try {
+                let books = [];
                 if (this.currentTimeFilter === 'bestseller') {
-                    this.currentBooks = await bookAPI.getBestseller('Bestseller');
+                    books = await bookAPI.getBestseller('Bestseller');
                 } else if (this.currentTimeFilter === 'month') {
-                    this.currentBooks = await bookAPI.getBestseller('ItemNewSpecial');
+                    books = await bookAPI.getBestseller('ItemNewSpecial');
                 }
+                
+                this.allBooks = books;
+                
+                // 분야별로 책 분류 (각 분야별로 1-50위)
+                const categories = ['소설', '경제', '자기계발', '에세이'];
+                this.categoryBooks = {};
+                
+                categories.forEach(category => {
+                    const filtered = books.filter(book => {
+                        if (!book.genre) return false;
+                        return book.genre.includes(category);
+                    }).slice(0, 50);  // 각 분야별로 최대 50권
+                    
+                    this.categoryBooks[category] = filtered;
+                });
+                
             } catch (error) {
                 console.error('베스트셀러 로드 에러:', error);
-                this.currentBooks = [];
+                this.allBooks = [];
+                this.categoryBooks = {};
             } finally {
                 this.isLoadingBestseller = false;
             }
@@ -207,18 +222,15 @@ const UserDashboard = {
             const delta = event.deltaY;
             
             if (delta < 0) {
-                // 위로 스크롤 = 이전 슬라이드 (랭킹 높은 곳으로)
                 this.prevSlide();
             } else if (delta > 0) {
-                // 아래로 스크롤 = 다음 슬라이드 (랭킹 낮은 곳으로)
                 this.nextSlide();
             }
         },
         prevSlide() {
-            const maxBooks = this.filteredBooks.length;
+            const maxBooks = this.displayedBooks.length;
             if (maxBooks === 0) return;
             
-            // 순환: 0번째에서 뒤로가면 마지막으로
             if (this.slideIndex <= 0) {
                 this.slideIndex = Math.max(0, maxBooks - 5);
             } else {
@@ -227,12 +239,11 @@ const UserDashboard = {
             this.slideOffset = -this.slideIndex * 200;
         },
         nextSlide() {
-            const maxBooks = this.filteredBooks.length;
+            const maxBooks = this.displayedBooks.length;
             if (maxBooks === 0) return;
             
             const maxSlides = Math.max(0, maxBooks - 5);
             
-            // 순환: 마지막에서 앞으로가면 처음으로
             if (this.slideIndex >= maxSlides) {
                 this.slideIndex = 0;
             } else {
