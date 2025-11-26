@@ -537,7 +537,8 @@ const ReviewWrite = {
         },
         logout() {
             store.clearCurrentUser();
-            this.$router.push('/dashboard');
+            // 즉시 UI 업데이트를 위해 페이지 새로고침
+            window.location.href = '/#/dashboard';
         }
     }
 };
