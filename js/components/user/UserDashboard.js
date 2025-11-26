@@ -122,9 +122,9 @@ const UserDashboard = {
             user: store.currentUser || { points: 0 },
             reviewCount: store.currentUser ? store.getReviews().filter(r => r.userId === store.currentUser.id).length : 0,
             quizCount: store.currentUser ? store.getQuizResults().filter(q => q.userId === store.currentUser.id).length : 0,
-            
+
             headerSearchQuery: '',
-            
+
             currentTimeFilter: 'bestseller',
             currentCategoryFilter: 'all',
             currentBooks: [],
@@ -192,7 +192,7 @@ const UserDashboard = {
                 } else if (this.currentCategoryFilter === '에세이') {
                     categoryId = 55890;
                 }
-                
+
                 // 시간 필터에 따라 QueryType 결정
                 if (this.currentTimeFilter === 'bestseller') {
                     this.currentBooks = await bookAPI.getBestseller('Bestseller', categoryId);
@@ -209,7 +209,7 @@ const UserDashboard = {
         handleWheel(event) {
             event.preventDefault();
             const delta = event.deltaY;
-            
+
             if (delta < 0) {
                 // 위로 스크롤 = 이전 슬라이드 (랭킹 높은 곳으로)
                 this.prevSlide();
@@ -221,7 +221,7 @@ const UserDashboard = {
         prevSlide() {
             const maxBooks = this.currentBooks.length;
             if (maxBooks === 0) return;
-            
+
             // 순환: 0번째에서 뒤로가면 마지막으로
             if (this.slideIndex <= 0) {
                 this.slideIndex = Math.max(0, maxBooks - 5);
@@ -233,9 +233,9 @@ const UserDashboard = {
         nextSlide() {
             const maxBooks = this.currentBooks.length;
             if (maxBooks === 0) return;
-            
+
             const maxSlides = Math.max(0, maxBooks - 5);
-            
+
             // 순환: 마지막에서 앞으로가면 처음으로
             if (this.slideIndex >= maxSlides) {
                 this.slideIndex = 0;
