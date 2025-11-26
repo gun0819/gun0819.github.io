@@ -1,53 +1,129 @@
 # 독서 인증 플랫폼
 
-모듈화된 Vue.js 기반 독서 인증 플랫폼입니다.
+AI 기반 독서 인증 및 커뮤니티 플랫폼입니다. Vue.js와 알라딘 API를 활용하여 독서 활동을 장려하고 보상하는 시스템입니다.
 
-## 📁 파일 구조
+## 📋 주요 기능
+
+### 🔐 사용자 인증
+- 회원가입 / 로그인
+- 아이디/비밀번호 찾기 (SMS 인증 시뮬레이션)
+- 일반 사용자 / 관리자 역할 구분
+
+### 📚 도서 검색 및 상세
+- **알라딘 API 실시간 검색**: 50만+ 도서 데이터
+- **자동완성 검색**: 입력하는 즉시 도서 추천
+- **도서 상세 페이지**: 교보문고 스타일의 전문적인 UI
+  - 도서 정보, 평균 별점, 리뷰 수
+  - 한줄 평 목록 (공감순/최신순)
+  - 사용자 생성 퀴즈 목록
+- **베스트셀러**: 실시간 베스트셀러 슬라이드
+  - 올해/이번달 인기순
+  - 카테고리별 필터 (소설, 경제, 자기계발, 에세이)
+  - 3초 자동 슬라이드, 마우스 휠로 이동 가능
+
+### ✍️ 감상문 작성
+- **최소 100자, 최대 10,000자** 제한
+- **한줄 평 (필수)**: 무조건 공개되는 짧은 평가
+- **감상문 본문**: 공개/비공개 설정 가능
+- **별점 평가**: 1~5점
+- **붙여넣기 차단**: 직접 작성 유도
+- **승인 시스템**: 관리자 승인 후 100 포인트 지급
+- **수정 제한**: 승인 후에는 수정 불가 (승인 대기 중에만 수정 가능)
+
+### 🎯 퀴즈 시스템
+- **관리자 퀴즈**: 기본 제공 퀴즈
+- **사용자 생성 퀴즈**: 감상문 작성 시 퀴즈 등록 가능
+  - 객관식 (2~5개 보기)
+  - 주관식 (정답 일치 확인)
+  - 서술형 (예시 답안 제공, 자가 채점)
+- **80점 이상 통과**: 50 포인트 지급
+- **재응시 방지**: 같은 퀴즈는 한 번만 응시 가능
+- **본인 퀴즈 제외**: 자신이 만든 퀴즈는 풀 수 없음
+
+### 💬 커뮤니티 기능
+- **한줄 평**: 모든 감상문에 무조건 공개되는 짧은 평가
+- **댓글 시스템**: 공개된 감상문에 댓글 작성
+- **공감 시스템**: 
+  - 한줄 평, 감상문 본문, 댓글에 공감 가능
+  - 100공감당 100 포인트 지급
+  - 자신의 글에는 공감 불가
+
+### 💎 포인트 시스템
+- **획득 방법**:
+  - 감상문 승인: 100 포인트
+  - 퀴즈 통과 (80점 이상): 50 포인트
+  - 100공감 달성: 100 포인트
+- **월별 한도**:
+  - 활동 포인트 (감상문 + 퀴즈): 월 10,000P
+  - 공감 포인트: 월 10,000P
+- **포인트 교환**:
+  - 스타벅스 아메리카노 (4,500P)
+  - 교보문고 상품권 (5,000P ~ 30,000P)
+- **관리자 승인 시스템**: 보상 신청 후 관리자 승인 필요
+
+### 🚫 포인트 제외 카테고리
+다음 카테고리의 도서는 감상문 작성 시 포인트가 지급되지 않습니다:
+- 초등/중등/고등학교 참고서
+- 수험서/자격증
+- 공무원 수험서
+- 웹소설/인터넷소설
+
+### 👨‍💼 관리자 기능
+- 감상문 승인/반려 (반려 시 사유 기록)
+- 보상 신청 승인/보류
+- 사용자/감상문/퀴즈 통계
+- 전체 플랫폼 현황 대시보드
+
+## 📁 프로젝트 구조
 
 ```
 /
 ├── index.html              # 메인 HTML 파일
+├── netlify.toml            # Netlify 배포 설정
 ├── css/
-│   └── styles.css         # 스타일시트
+│   └── styles.css         # 전체 스타일시트
 ├── js/
-│   ├── config.js          # 설정 (API 키 등)
+│   ├── config.js          # 설정 (API 키, 상수)
 │   ├── storage.js         # LocalStorage 유틸리티
 │   ├── api.js             # 알라딘 API 연동
-│   ├── store.js           # 데이터 스토어
-│   ├── router.js          # 라우터 설정
+│   ├── store.js           # 데이터 스토어 (상태 관리)
+│   ├── router.js          # Vue Router 설정
 │   ├── app.js             # 앱 초기화
-│   └── components/        # 컴포넌트들
-│       ├── auth/          # 인증 관련
-│       │   ├── Login.js
-│       │   ├── Signup.js
-│       │   ├── FindAccount.js
-│       │   └── FindPassword.js
+│   └── components/        # Vue 컴포넌트
+│       ├── auth/          # 인증 (로그인, 회원가입, 찾기)
 │       ├── user/          # 사용자 기능
-│       │   ├── UserDashboard.js  (메인 UI)
-│       │   ├── MyReviews.js
-│       │   ├── ReviewWrite.js
-│       │   ├── ReviewDetail.js
-│       │   ├── CompletedQuizzes.js
-│       │   ├── Quiz.js
-│       │   ├── QuizResultDetail.js
-│       │   ├── MyPage.js
-│       │   ├── PointsExchange.js
-│       │   ├── PointsHistory.js
-│       │   └── PointsRequests.js
+│       │   ├── UserDashboard.js     # 메인 대시보드
+│       │   ├── SearchResults.js     # 검색 결과
+│       │   ├── BookDetail.js        # 도서 상세 페이지
+│       │   ├── MyReviews.js         # 내 감상문
+│       │   ├── ReviewWrite.js       # 감상문 작성
+│       │   ├── ReviewDetail.js      # 감상문 상세
+│       │   ├── CompletedQuizzes.js  # 완료한 퀴즈
+│       │   ├── Quiz.js              # 퀴즈 풀기
+│       │   ├── QuizResultDetail.js  # 퀴즈 결과
+│       │   ├── MyPage.js            # 마이페이지
+│       │   ├── PointsExchange.js    # 포인트 교환소
+│       │   ├── PointsHistory.js     # 적립 내역
+│       │   └── PointsRequests.js    # 신청 내역
 │       └── admin/         # 관리자 기능
 │           ├── AdminDashboard.js
 │           ├── AdminReviews.js
 │           ├── AdminBooks.js
 │           ├── AdminRewards.js
 │           └── AdminStats.js
+├── netlify/
+│   └── functions/
+│       └── aladin-search.js  # 서버리스 함수 (CORS 우회)
 └── README.md
 ```
 
 ## 🚀 시작하기
 
-### 1. 알라딘 API 키 설정
+### 1. 알라딘 API 키 발급
 
-`js/config.js` 파일을 열고 발급받은 TTB 키를 입력하세요:
+1. [알라딘 개발자 센터](https://www.aladin.co.kr/ttb/wblog_manage.aspx) 접속
+2. 로그인 후 TTB 키 발급
+3. `js/config.js`에 키 입력:
 
 ```javascript
 const CONFIG = {
@@ -56,136 +132,168 @@ const CONFIG = {
 };
 ```
 
-### 2. Netlify Functions 설정
+### 2. 로컬 개발 환경
 
-베스트셀러 기능을 위해 `/.netlify/functions/aladin-search.js` 파일이 필요합니다.
-
-### 3. 서버 실행
-
-로컬 웹 서버를 실행하거나 Netlify에 배포하세요.
-
+**방법 1: Netlify Dev (권장)**
 ```bash
-# 로컬 테스트 (예: http-server 사용)
-npx http-server .
-
-# 또는 Netlify CLI
+npm install -g netlify-cli
 netlify dev
 ```
 
-### 4. 로그인
+**방법 2: 간단한 HTTP 서버**
+```bash
+npx http-server .
+```
 
-브라우저에서 `index.html`을 열고 다음 계정으로 로그인:
+### 3. Netlify 배포
 
-- **일반 사용자**: `user@test.com` / `user1234`
-- **관리자**: `admin@test.com` / `admin1234`
+```bash
+# Netlify CLI로 배포
+netlify deploy --prod
 
-## ✨ 주요 기능
+# 또는 Git 연동으로 자동 배포
+```
 
-### 🔍 메인 대시보드 (UserDashboard.js)
-- 네이버 스타일 중앙 검색창
-- 실시간 자동완성
-- 베스트셀러 슬라이드 (3초마다 자동 슬라이드)
-- 4가지 필터 옵션:
-  - 올해 인기 순
-  - 이번달 인기 순
-  - 올해 감상문 많은 순
-  - 이번달 감상문 많은 순
+## 🔑 테스트 계정
 
-### 📝 감상문 & 퀴즈
-- 도서 검색 후 감상문 작성
-- 퀴즈 풀기 (80점 이상 시 포인트 획득)
-- 관리자 승인 시스템
+### 일반 사용자
+- **이메일**: `user@test.com`
+- **비밀번호**: `user1234`
+- **포인트**: 150P
 
-### 🎁 포인트 시스템
-- 감상문 승인: 100포인트
-- 퀴즈 통과: 50포인트
-- 포인트로 보상 교환 가능
+### 일반 사용자 2
+- **이메일**: `user2@test.com`
+- **비밀번호**: `user1234`
+- **포인트**: 250P
 
-## 🔧 개발 가이드
+### 관리자
+- **이메일**: `admin@test.com`
+- **비밀번호**: `admin1234`
 
-### 새로운 컴포넌트 추가
+## 💡 사용 시나리오
 
-1. `js/components/` 폴더에 새 파일 생성
-2. Vue 컴포넌트 객체 정의
-3. `index.html`에 스크립트 추가
-4. `js/router.js`에 라우트 추가
+### 일반 사용자 플로우
+1. 회원가입 또는 로그인
+2. 메인 페이지에서 도서 검색 또는 베스트셀러 탐색
+3. 도서 상세 페이지에서 정보 확인
+4. 감상문 작성 (선택: 퀴즈도 함께 생성)
+5. 관리자 승인 대기
+6. 승인 후 100 포인트 획득
+7. 다른 사용자의 퀴즈 도전
+8. 80점 이상 획득 시 50 포인트 추가
+9. 공감을 받아 100공감 달성 시 100 포인트 추가
+10. 포인트로 보상 신청
+11. 관리자 승인 후 보상 수령
 
-예시:
+### 관리자 플로우
+1. 관리자 계정으로 로그인
+2. 대시보드에서 전체 현황 확인
+3. 승인 대기 중인 감상문 검토
+4. 감상문 승인 또는 반려 (반려 시 사유 작성)
+5. 보상 신청 승인 또는 보류
+6. 통계 페이지에서 플랫폼 분석
+
+## 🎨 주요 기술
+
+- **프론트엔드**: Vue.js 3 (CDN)
+- **라우터**: Vue Router 4
+- **스타일**: Pure CSS (반응형 디자인)
+- **API**: 알라딘 Open API
+- **배포**: Netlify (서버리스 함수)
+- **저장소**: LocalStorage (클라이언트 측)
+
+## ⚙️ 설정 옵션
+
+`js/config.js`에서 다음을 설정할 수 있습니다:
 
 ```javascript
-// js/components/user/NewFeature.js
-const NewFeature = {
-    template: `<div>새로운 기능</div>`,
-    data() {
-        return {
-            // 데이터...
-        };
+const CONFIG = {
+    ALADIN_TTB_KEY: 'your_key_here',
+    
+    POINTS: {
+        REVIEW_APPROVAL: 100,           // 감상문 승인 포인트
+        QUIZ_PASS: 50,                  // 퀴즈 통과 포인트
+        LIKES_PER_100: 100,             // 100공감당 포인트
+        MONTHLY_LIMIT_ACTIVITY: 10000,  // 월 활동 한도
+        MONTHLY_LIMIT_LIKES: 10000      // 월 공감 한도
     },
-    methods: {
-        // 메서드...
-    }
+    
+    REVIEW: {
+        MIN_LENGTH: 100,     // 감상문 최소 글자 수
+        MAX_LENGTH: 10000    // 감상문 최대 글자 수
+    },
+    
+    EXCLUDED_CATEGORIES: [  // 포인트 제외 카테고리
+        '초등학교참고서',
+        '중학교참고서',
+        '고등학교참고서',
+        '수험서/자격증',
+        // ...
+    ]
 };
-```
-
-### 스토어 데이터 접근
-
-```javascript
-// 사용자 정보
-store.currentUser
-
-// 리뷰 가져오기
-store.getReviews()
-
-// 포인트 추가
-store.addUserPoints(email, amount, reason)
-```
-
-### API 호출
-
-```javascript
-// 도서 검색
-const books = await bookAPI.searchAladin('검색어');
-
-// 베스트셀러 가져오기
-const bestsellers = await bookAPI.getBestseller('Bestseller');
-```
-
-## 📝 TODO
-
-- 실독 여부 확인 알고리즘 도입
-- OAUTH2 기반 로그인 기능 도입
-
-## 🎨 스타일 커스터마이징
-
-`css/styles.css` 파일을 수정하여 디자인 변경:
-
-```css
-/* 메인 색상 변경 */
-.btn {
-    background: #your-color;
-}
-
-/* 폰트 변경 */
-body {
-    font-family: 'Your Font', sans-serif;
-}
 ```
 
 ## 🐛 문제 해결
 
 ### CORS 오류
 - Netlify Functions를 사용하고 있는지 확인
-- 로컬 테스트 시 Netlify Dev 사용
+- 로컬 테스트 시 `netlify dev` 사용
+- 알라딘 API는 HTTP만 지원하므로 프록시 필수
 
 ### 베스트셀러가 안 보임
-- 알라딘 API 키 확인
-- 네트워크 탭에서 에러 확인
+- 알라딘 API 키 확인 (`js/config.js`)
+- 브라우저 콘솔에서 에러 확인
 - Netlify Functions 로그 확인
 
-## 📞 지원
+### 검색 결과가 안 나옴
+- 네트워크 탭에서 API 요청 확인
+- TTB 키가 올바른지 확인
+- 검색어를 영문으로도 시도
 
-문제가 발생하면 개발자 콘솔(F12)에서 에러 메시지를 확인하세요.
+### 로그인이 안 됨
+- LocalStorage가 활성화되어 있는지 확인
+- 시크릿 모드에서는 데이터가 유지되지 않음
+- 테스트 계정 정보 확인
+
+## 🔄 데이터 초기화
+
+LocalStorage를 초기화하려면 브라우저 콘솔에서:
+
+```javascript
+localStorage.clear();
+location.reload();
+```
+
+## 📝 TODO
+
+### 기능 개선
+- [ ] OAuth2 기반 소셜 로그인 (구글, 카카오, 네이버)
+- [ ] Firebase/Supabase 백엔드 연동
+- [ ] 실독 여부 확인 AI 알고리즘
+- [ ] 도서 추천 알고리즘 (협업 필터링)
+- [ ] 독서 통계 및 분석 (월간 리포트)
+- [ ] 뱃지 및 업적 시스템
+- [ ] 독서 모임/챌린지 기능
+
+### 기술 개선
+- [ ] TypeScript 마이그레이션
+- [ ] Vue 3 Composition API 적용
+- [ ] Pinia (상태 관리 라이브러리)
+- [ ] 서버 측 데이터베이스 (MariaDB/PostgreSQL)
+- [ ] RESTful API 서버 구축
+- [ ] 이미지 업로드 기능 (도서 인증샷)
+- [ ] PWA (Progressive Web App) 지원
+- [ ] 다크 모드
+
+## 📄 라이선스
+
+MIT License
+
+## 👥 기여
+
+이 프로젝트는 교육 목적으로 제작되었습니다. 
+기여를 환영합니다!
 
 ---
 
-Made with ❤️ for book lovers
+**Made with ❤️ for book lovers**
