@@ -1,4 +1,4 @@
-// 도서 상세 페이지 컴포넌트 (개선된 UI)
+// 도서 상세 페이지 컴포넌트 (교보문고 스타일)
 const BookDetail = {
     template: `
         <div>
@@ -88,11 +88,8 @@ const BookDetail = {
                                 <button v-if="isLoggedIn && hasReview" disabled class="btn" style="opacity: 0.5;">
                                     ✅ 감상문 작성 완료
                                 </button>
-                                <button v-if="isLoggedIn && !hasQuiz && availableQuizzes.length > 0" @click="startQuiz" class="btn">
+                                <button v-if="isLoggedIn && availableQuizzes.length > 0" @click="startQuiz" class="btn">
                                     🎯 퀴즈 풀기
-                                </button>
-                                <button v-if="isLoggedIn && hasQuiz" disabled class="btn" style="opacity: 0.5;">
-                                    ✅ 퀴즈 완료
                                 </button>
                                 <button v-if="!isLoggedIn" @click="$router.push('/login')" class="btn">
                                     로그인하고 시작하기
@@ -106,48 +103,45 @@ const BookDetail = {
                         </div>
                     </div>
                     
-                    <!-- 책 소개 섹션 (분리) -->
-                    <div v-if="book.description" class="section-container">
+                    <!-- 책 소개 -->
+                    <div v-if="book.description" class="book-description-section">
                         <h2>📖 책 소개</h2>
-                        <div class="section-content">
-                            <p class="book-description-text">{{ book.description }}</p>
-                        </div>
+                        <p class="book-description-text">{{ book.description }}</p>
                     </div>
                     
-                    <!-- 한줄 평 섹션 (개선된 UI) -->
-                    <div class="section-container">
+                    <!-- 한줄 평 섹션 -->
+                    <div class="oneline-reviews-section">
                         <div class="section-header">
                             <h2>💬 한줄 평 ({{ onelineReviews.length }})</h2>
                             <div class="sort-buttons">
-                                <button :class="['sort-btn', {active: reviewSortType === 'likes'}]" @click="reviewSortType = 'likes'">
+                                <button :class="['sort-btn', {active: sortType === 'likes'}]" @click="sortType = 'likes'">
                                     공감순
                                 </button>
-                                <button :class="['sort-btn', {active: reviewSortType === 'recent'}]" @click="reviewSortType = 'recent'">
+                                <button :class="['sort-btn', {active: sortType === 'recent'}]" @click="sortType = 'recent'">
                                     최신순
                                 </button>
                             </div>
                         </div>
                         
-                        <div v-if="sortedOnelineReviews.length > 0" class="review-list">
-                            <div v-for="oneline in sortedOnelineReviews" :key="oneline.id" class="review-item">
-                                <div class="review-header">
-                                    <div class="review-user-info">
-                                        <span class="review-nickname">{{ oneline.userNickname }}</span>
-                                        <span class="review-rating">{{ '⭐'.repeat(oneline.rating) }}</span>
-                                        <span class="review-date">{{ oneline.date }}</span>
+                        <div v-if="sortedOnelineReviews.length > 0" class="oneline-list">
+                            <div v-for="oneline in sortedOnelineReviews" :key="oneline.id" class="oneline-card">
+                                <div class="oneline-header">
+                                    <div class="oneline-user-info">
+                                        <span class="oneline-nickname">{{ oneline.userNickname }}</span>
+                                        <span class="oneline-date">{{ oneline.date }}</span>
                                     </div>
+                                    <div class="oneline-rating">{{ '⭐'.repeat(oneline.rating) }}</div>
                                 </div>
-                                <p class="review-content">{{ oneline.onelineReview }}</p>
-                                <div class="review-footer">
+                                <p class="oneline-content">{{ oneline.onelineReview }}</p>
+                                <div class="oneline-footer">
                                     <button @click="toggleLike('oneline', oneline.id, oneline.userId)" 
-                                            :class="['interaction-btn', {active: hasLiked('oneline', oneline.id)}]"
+                                            :class="['like-btn', {liked: hasLiked('oneline', oneline.id)}]"
                                             :disabled="!isLoggedIn || oneline.userId === currentUserId">
-                                        <span class="icon">{{ hasLiked('oneline', oneline.id) ? '❤️' : '🤍' }}</span>
-                                        <span class="count">{{ getLikeCount('oneline', oneline.id) }}</span>
+                                        {{ hasLiked('oneline', oneline.id) ? '❤️' : '🤍' }}
+                                        {{ getLikeCount('oneline', oneline.id) }}
                                     </button>
-                                    <button v-if="oneline.isPublic" @click="viewReview(oneline.id)" class="interaction-btn">
-                                        <span class="icon">📄</span>
-                                        <span class="text">전체 감상문 보기</span>
+                                    <button v-if="oneline.isPublic" @click="viewReview(oneline.id)" class="view-review-btn">
+                                        전체 감상문 보기 →
                                     </button>
                                 </div>
                             </div>
@@ -158,37 +152,22 @@ const BookDetail = {
                         </div>
                     </div>
                     
-                    <!-- 사용자 퀴즈 섹션 (정렬 기능 추가) -->
-                    <div class="section-container">
-                        <div class="section-header">
-                            <h2>🎯 사용자 제출 퀴즈 ({{ availableQuizzes.length }})</h2>
-                            <div class="sort-buttons">
-                                <button :class="['sort-btn', {active: quizSortType === 'likes'}]" @click="quizSortType = 'likes'">
-                                    공감순
-                                </button>
-                                <button :class="['sort-btn', {active: quizSortType === 'recent'}]" @click="quizSortType = 'recent'">
-                                    최신순
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div v-if="sortedQuizzes.length > 0" class="quiz-grid">
-                            <div v-for="quiz in sortedQuizzes" :key="quiz.id" class="quiz-item">
-                                <div class="quiz-header">
-                                    <h3>퀴즈 by {{ quiz.creatorNickname }}</h3>
-                                    <button @click="toggleLike('quiz', quiz.id, quiz.creatorId)" 
-                                            :class="['interaction-btn', 'small', {active: hasLiked('quiz', quiz.id)}]"
-                                            :disabled="!isLoggedIn || quiz.creatorId === currentUserId">
-                                        <span class="icon">{{ hasLiked('quiz', quiz.id) ? '❤️' : '🤍' }}</span>
-                                        <span class="count">{{ getLikeCount('quiz', quiz.id) }}</span>
-                                    </button>
+                    <!-- 사용자 퀴즈 섹션 -->
+                    <div class="user-quizzes-section">
+                        <h2>🎯 사용자 제출 퀴즈 ({{ availableQuizzes.length }})</h2>
+                        <div v-if="availableQuizzes.length > 0" class="quiz-list">
+                            <div v-for="(quiz, index) in availableQuizzes" :key="quiz.id" class="quiz-card">
+                                <div class="quiz-card-header">
+                                    <h3>퀴즈 #{{ index + 1 }}</h3>
+                                    <span class="quiz-creator">by {{ quiz.creatorNickname }}</span>
                                 </div>
                                 <p class="quiz-info">
                                     {{ quiz.questions.length }}문제 
                                     (객관식: {{ quiz.questions.filter(q => q.type === 'multiple').length }}, 
-                                    주관식: {{ quiz.questions.filter(q => q.type === 'short').length }})
+                                    주관식: {{ quiz.questions.filter(q => q.type === 'short').length }}, 
+                                    서술형: {{ quiz.questions.filter(q => q.type === 'essay').length }})
                                 </p>
-                                <button v-if="isLoggedIn && !hasQuiz" @click="startUserQuiz(quiz.id)" class="btn btn-sm">
+                                <button v-if="isLoggedIn && !hasCompletedQuiz(quiz.id)" @click="startUserQuiz(quiz.id)" class="btn btn-sm">
                                     퀴즈 풀기
                                 </button>
                                 <button v-else-if="!isLoggedIn" @click="$router.push('/login')" class="btn btn-sm">
@@ -199,7 +178,6 @@ const BookDetail = {
                                 </button>
                             </div>
                         </div>
-                        
                         <div v-else class="empty-state">
                             <p>아직 등록된 퀴즈가 없습니다.</p>
                             <p v-if="isLoggedIn" style="font-size: 14px; color: #666; margin-top: 8px;">
@@ -221,8 +199,7 @@ const BookDetail = {
             bookId: this.$route.params.id,
             book: null,
             isLoading: true,
-            reviewSortType: 'likes',
-            quizSortType: 'likes',
+            sortType: 'likes',
             reviews: [],
             onelineReviews: [],
             headerSearchQuery: ''
@@ -248,10 +225,6 @@ const BookDetail = {
                 this.book?.author
             );
         },
-        hasQuiz() {
-            if (!this.isLoggedIn) return false;
-            return store.hasQuizForBook(store.currentUser.id, this.bookId);
-        },
         availableQuizzes() {
             if (!this.book) return [];
             return store.getQuizzesByBook(this.bookId, this.book.title, this.book.author);
@@ -265,7 +238,7 @@ const BookDetail = {
             return this.reviews.length;
         },
         sortedOnelineReviews() {
-            if (this.reviewSortType === 'likes') {
+            if (this.sortType === 'likes') {
                 return [...this.onelineReviews].sort((a, b) => {
                     const likesA = store.getLikeCount('oneline', a.id);
                     const likesB = store.getLikeCount('oneline', b.id);
@@ -273,17 +246,6 @@ const BookDetail = {
                 });
             } else {
                 return [...this.onelineReviews].sort((a, b) => b.id - a.id);
-            }
-        },
-        sortedQuizzes() {
-            if (this.quizSortType === 'likes') {
-                return [...this.availableQuizzes].sort((a, b) => {
-                    const likesA = store.getLikeCount('quiz', a.id);
-                    const likesB = store.getLikeCount('quiz', b.id);
-                    return likesB - likesA;
-                });
-            } else {
-                return [...this.availableQuizzes].sort((a, b) => b.id - a.id);
             }
         }
     },
@@ -356,10 +318,20 @@ const BookDetail = {
                 return;
             }
             
-            this.$router.push(`/user-quiz/${this.availableQuizzes[0].id}`);
+            // 완료하지 않은 첫 번째 퀴즈로 이동
+            const nextQuiz = this.availableQuizzes.find(q => !this.hasCompletedQuiz(q.id));
+            if (nextQuiz) {
+                this.$router.push(`/quiz/${nextQuiz.id}`);
+            } else {
+                alert('모든 퀴즈를 완료하셨습니다!');
+            }
         },
         startUserQuiz(quizId) {
-            this.$router.push(`/user-quiz/${quizId}`);
+            this.$router.push(`/quiz/${quizId}`);
+        },
+        hasCompletedQuiz(quizId) {
+            if (!this.isLoggedIn) return false;
+            return store.hasCompletedQuiz(this.currentUserId, quizId);
         },
         viewReview(reviewId) {
             this.$router.push(`/review-detail/${reviewId}`);

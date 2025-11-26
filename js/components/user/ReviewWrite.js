@@ -1,4 +1,4 @@
-// 감상문 작성 컴포넌트 (서술형 제거)
+// 감상문 작성 컴포넌트 (붙여넣기 차단)
 const ReviewWrite = {
     template: `
         <div>
@@ -100,7 +100,8 @@ const ReviewWrite = {
                             <input type="text" 
                                    v-model="onelineReview" 
                                    placeholder="이 책을 한 줄로 표현한다면? (최대 100자)"
-                                   maxlength="100">
+                                   maxlength="100"
+                                   @paste="preventPaste">
                             <p class="info">
                                 한줄 평은 공개/비공개 설정과 관계없이 모든 사용자에게 공개됩니다.
                             </p>
@@ -109,13 +110,17 @@ const ReviewWrite = {
                             </p>
                         </div>
 
-                        <!-- 감상문 본문 -->
+                        <!-- 감상문 본문 (붙여넣기 차단) -->
                         <div class="form-group">
-                            <label>감상문 (100자 이상, 10,000자 이하) *</label>
+                            <label>감상문 (100자 이상, 10,000자 이하) * 
+                                <span style="color: #f44336; font-size: 12px;">※ 붙여넣기가 차단됩니다</span>
+                            </label>
                             <textarea v-model="reviewText" 
                                       rows="15" 
                                       placeholder="책을 읽고 느낀 점을 자유롭게 작성해주세요..."
-                                      :maxlength="10000"></textarea>
+                                      :maxlength="10000"
+                                      @paste="preventPaste"
+                                      @contextmenu="preventContextMenu"></textarea>
                             <p style="text-align: right; color: #666; margin-top: 5px;">
                                 {{ reviewText.length }} / 10,000자
                                 <span v-if="reviewText.length >= 100" style="color: #4caf50;">✓ (최소 100자 달성)</span>
@@ -167,7 +172,7 @@ const ReviewWrite = {
                         <div v-if="wantToCreateQuiz" class="quiz-creation-section">
                             <h3>📝 퀴즈 만들기</h3>
                             <p style="color: #666; margin-bottom: 20px;">
-                                객관식, 주관식 문제를 자유롭게 만들어보세요.
+                                객관식, 주관식, 서술형 문제를 자유롭게 만들어보세요.
                             </p>
 
                             <div class="form-group">
@@ -175,6 +180,7 @@ const ReviewWrite = {
                                 <select v-model="currentQuizType" style="width: 200px;">
                                     <option value="multiple">객관식</option>
                                     <option value="short">주관식</option>
+                                    <option value="essay">서술형</option>
                                 </select>
                             </div>
 
@@ -212,14 +218,16 @@ const ReviewWrite = {
                                 </button>
                             </div>
 
-                            <!-- 주관식 정답 -->
+                            <!-- 주관식/서술형 정답 -->
                             <div v-else class="form-group">
-                                <label>정답</label>
+                                <label>{{ currentQuizType === 'short' ? '정답' : '예시 답안' }}</label>
                                 <textarea v-model="currentAnswerText"
-                                          rows="2"
-                                          placeholder="정답을 입력하세요"></textarea>
+                                          :rows="currentQuizType === 'essay' ? 5 : 2"
+                                          :placeholder="currentQuizType === 'short' ? '정답을 입력하세요' : '예시 답안을 입력하세요'"></textarea>
                                 <p class="info">
-                                    주관식은 정확한 정답을 입력해주세요.
+                                    {{ currentQuizType === 'short' ? 
+                                       '주관식은 정확한 정답을 입력해주세요.' : 
+                                       '서술형은 예시 답안만 제공됩니다. 다른 사용자가 스스로 채점합니다.' }}
                                 </p>
                             </div>
 
@@ -244,7 +252,7 @@ const ReviewWrite = {
                                                 정답: {{ q.options[q.answer] }}
                                             </p>
                                             <p v-else style="font-size: 14px; color: #666; margin-top: 8px;">
-                                                정답: {{ q.answerText }}
+                                                {{ q.type === 'short' ? '정답: ' : '예시 답안: ' }}{{ q.answerText }}
                                             </p>
                                         </div>
                                         <button @click="removeQuizQuestion(idx)" 
@@ -353,6 +361,16 @@ const ReviewWrite = {
                 path: '/search',
                 query: { q: this.headerSearchQuery }
             });
+        },
+        // 붙여넣기 차단
+        preventPaste(event) {
+            event.preventDefault();
+            alert('붙여넣기는 허용되지 않습니다. 직접 작성해주세요.');
+        },
+        // 우클릭 메뉴 차단 (붙여넣기 방지)
+        preventContextMenu(event) {
+            event.preventDefault();
+            return false;
         },
         async loadBook() {
             try {
@@ -491,7 +509,7 @@ const ReviewWrite = {
                 question.answer = this.currentAnswer;
             } else {
                 if (!this.currentAnswerText.trim()) {
-                    alert('정답을 입력해주세요.');
+                    alert(this.currentQuizType === 'short' ? '정답을 입력해주세요.' : '예시 답안을 입력해주세요.');
                     return;
                 }
                 question.answerText = this.currentAnswerText;
@@ -512,7 +530,8 @@ const ReviewWrite = {
         getQuizTypeName(type) {
             const names = {
                 'multiple': '객관식',
-                'short': '주관식'
+                'short': '주관식',
+                'essay': '서술형'
             };
             return names[type] || type;
         },

@@ -413,11 +413,20 @@ const store = {
         });
     },
     
+    // 구 퀴즈 중복 체크 (북 ID 기반) - 하위 호환성 유지
     hasQuizForBook(userId, bookId) {
         const results = this.getQuizResults();
         return results.some(q => {
             const quizBookId = q.bookId || q.book?.id || q.book?.isbn;
             return q.userId === userId && quizBookId == bookId;
+        });
+    },
+    
+    // NEW: 퀴즈 중복 체크 (퀴즈 ID 기반)
+    hasCompletedQuiz(userId, quizId) {
+        const results = this.getQuizResults();
+        return results.some(q => {
+            return q.userId === userId && q.quizId == quizId;
         });
     },
     
@@ -437,11 +446,13 @@ const store = {
             bookId: '9788932917245',
             questions: [
                 {
+                    type: 'multiple',
                     question: '어린 왕자가 사는 별의 이름은?',
                     options: ['B-612', 'B-512', 'A-612', 'C-612'],
                     answer: 0
                 },
                 {
+                    type: 'multiple',
                     question: '어린 왕자가 지구에서 처음 만난 동물은?',
                     options: ['여우', '뱀', '장미', '양'],
                     answer: 1

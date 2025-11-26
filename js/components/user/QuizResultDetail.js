@@ -1,4 +1,4 @@
-// 퀴즈 결과 상세보기 컴포넌트
+// 퀴즈 결과 상세보기 컴포넌트 (주관식/서술형 지원)
 const QuizResultDetail = {
     template: `
         <div>
@@ -66,13 +66,15 @@ const QuizResultDetail = {
                             <h3 style="margin-bottom: 20px;">문제별 결과</h3>
                             <div v-for="(answer, index) in quizResult.answers" :key="index" class="quiz-question">
                                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-                                    <h4 style="margin: 0;">{{ index + 1 }}. {{ answer.question }}</h4>
+                                    <h4 style="margin: 0;">{{ index + 1 }}. [{{ getQuestionTypeName(answer.type) }}] {{ answer.question }}</h4>
                                     <span :class="['badge', answer.isCorrect ? 'badge-approved' : 'badge-rejected']">
                                         {{ answer.isCorrect ? '정답 ✓' : '오답 ✗' }}
                                     </span>
                                 </div>
-                                <div class="quiz-options">
-                                    <div v-for="(option, optIndex) in getQuizOptions(quizResult.bookId, index)" :key="optIndex"
+                                
+                                <!-- 객관식 -->
+                                <div v-if="answer.type === 'multiple'" class="quiz-options">
+                                    <div v-for="(option, optIndex) in answer.options" :key="optIndex"
                                          :class="getOptionClass(answer, optIndex)">
                                         {{ optIndex + 1 }}. {{ option }}
                                         <span v-if="optIndex === answer.correctAnswer" style="margin-left: 8px;">
@@ -81,6 +83,33 @@ const QuizResultDetail = {
                                         <span v-if="optIndex === answer.selectedAnswer && !answer.isCorrect" style="margin-left: 8px;">
                                             ✗ 내가 선택한 답
                                         </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 주관식 -->
+                                <div v-else-if="answer.type === 'short'" style="margin-top: 12px;">
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+                                        <p style="font-size: 14px; color: #666; margin-bottom: 8px;"><strong>내 답변:</strong></p>
+                                        <p style="font-size: 16px; color: #333;">{{ answer.selectedAnswer }}</p>
+                                    </div>
+                                    <div style="background: #e8f5e9; padding: 16px; border-radius: 8px;">
+                                        <p style="font-size: 14px; color: #2e7d32; margin-bottom: 8px;"><strong>정답:</strong></p>
+                                        <p style="font-size: 16px; color: #1b5e20;">{{ answer.correctAnswerText }}</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- 서술형 -->
+                                <div v-else-if="answer.type === 'essay'" style="margin-top: 12px;">
+                                    <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 12px;">
+                                        <p style="font-size: 14px; color: #666; margin-bottom: 8px;"><strong>내 답변:</strong></p>
+                                        <p style="font-size: 16px; color: #333; white-space: pre-wrap;">{{ answer.selectedAnswer }}</p>
+                                    </div>
+                                    <div style="background: #fff3e0; padding: 16px; border-radius: 8px;">
+                                        <p style="font-size: 14px; color: #ef6c00; margin-bottom: 8px;"><strong>예시 답안:</strong></p>
+                                        <p style="font-size: 16px; color: #e65100; white-space: pre-wrap;">{{ answer.correctAnswerText }}</p>
+                                        <p style="font-size: 12px; color: #bf360c; margin-top: 12px;">
+                                            💡 서술형은 예시 답안을 참고하여 스스로 채점하세요.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -130,11 +159,17 @@ const QuizResultDetail = {
         this.quizResult = results.find(q => q.id == this.quizResultId);
     },
     methods: {
-        getQuizOptions(bookId, questionIndex) {
-            const quiz = store.quizzes.find(q => q.bookId == bookId);
-            return quiz ? quiz.questions[questionIndex].options : [];
+        getQuestionTypeName(type) {
+            const names = {
+                'multiple': '객관식',
+                'short': '주관식',
+                'essay': '서술형'
+            };
+            return names[type] || '객관식';
         },
         getOptionClass(answer, optIndex) {
+            if (answer.type !== 'multiple') return '';
+            
             if (optIndex === answer.correctAnswer) {
                 return 'quiz-option correct';
             }
