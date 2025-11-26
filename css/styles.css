@@ -653,6 +653,79 @@ body {
     font-size: 14px;
 }
 
+/* 보상 카드 (이미지 포함) */
+.reward-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.reward-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.reward-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.reward-content {
+    display: flex;
+    height: 100%;
+}
+
+.reward-info {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.reward-info h3 {
+    color: #333;
+    margin-bottom: 8px;
+    font-size: 18px;
+}
+
+.reward-info p {
+    color: #666;
+    margin-bottom: 12px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+.reward-price {
+    font-size: 24px;
+    color: #667eea;
+    font-weight: bold;
+    margin-top: auto;
+    margin-bottom: 16px;
+}
+
+.reward-image {
+    width: 120px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.reward-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.reward-emoji {
+    font-size: 64px;
+}
+
 /* 책 표지 이미지 */
 .book-cover {
     width: 100%;
@@ -1026,18 +1099,11 @@ td.clickable:hover {
     flex-wrap: wrap;
 }
 
-/* 섹션 컨테이너 (책 소개, 한줄 평, 퀴즈) */
-.section-container {
+.book-description-section {
     margin: 40px 0;
     padding: 30px;
     background: #f8f9fa;
     border-radius: 12px;
-}
-
-.section-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
 }
 
 .book-description-text {
@@ -1047,19 +1113,15 @@ td.clickable:hover {
 }
 
 /* 한줄 평 섹션 */
+.oneline-reviews-section {
+    margin: 40px 0;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-}
-
-.section-header h2 {
-    margin: 0;
-    font-size: 22px;
-    color: #333;
 }
 
 .sort-buttons {
@@ -1088,13 +1150,13 @@ td.clickable:hover {
     border-color: #667eea;
 }
 
-.review-list {
+.oneline-list {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-.review-item {
+.oneline-card {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
@@ -1102,109 +1164,107 @@ td.clickable:hover {
     transition: box-shadow 0.3s;
 }
 
-.review-item:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+.oneline-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.review-header {
+.oneline-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.review-user-info {
+.oneline-user-info {
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-wrap: wrap;
 }
 
-.review-nickname {
+.oneline-nickname {
     font-weight: 600;
     color: #333;
-    font-size: 15px;
 }
 
-.review-rating {
-    font-size: 16px;
-}
-
-.review-date {
-    font-size: 13px;
+.oneline-date {
+    font-size: 12px;
     color: #999;
 }
 
-.review-content {
+.oneline-rating {
+    font-size: 18px;
+}
+
+.oneline-content {
     font-size: 16px;
     color: #333;
     margin-bottom: 16px;
     line-height: 1.6;
 }
 
-.review-footer {
+.oneline-footer {
     display: flex;
     gap: 12px;
     align-items: center;
-    flex-wrap: wrap;
 }
 
-/* 상호작용 버튼 (공감, 댓글) */
-.interaction-btn {
-    display: inline-flex;
+.like-btn {
+    display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 6px 12px;
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 20px;
     font-size: 14px;
     cursor: pointer;
     transition: all 0.3s;
-    color: #666;
 }
 
-.interaction-btn:hover:not(:disabled) {
-    border-color: #667eea;
-    color: #667eea;
+.like-btn:hover:not(:disabled) {
+    border-color: #ff6b6b;
+    color: #ff6b6b;
 }
 
-.interaction-btn.active {
+.like-btn.liked {
     background: #fff5f5;
     border-color: #ff6b6b;
     color: #ff6b6b;
 }
 
-.interaction-btn:disabled {
+.like-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-.interaction-btn.small {
+.view-review-btn {
     padding: 6px 12px;
-    font-size: 13px;
+    background: white;
+    border: 1px solid #667eea;
+    color: #667eea;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
-.interaction-btn .icon {
-    font-size: 16px;
+.view-review-btn:hover {
+    background: #667eea;
+    color: white;
 }
 
-.interaction-btn .count {
-    font-weight: 600;
+/* 퀴즈 섹션 */
+.user-quizzes-section {
+    margin: 40px 0;
 }
 
-.interaction-btn .text {
-    font-weight: 500;
-}
-
-/* 퀴즈 그리드 */
-.quiz-grid {
+.quiz-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
-.quiz-item {
+.quiz-card {
     background: white;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
@@ -1212,22 +1272,27 @@ td.clickable:hover {
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.quiz-item:hover {
+.quiz-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.quiz-header {
+.quiz-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
 }
 
-.quiz-header h3 {
+.quiz-card-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 18px;
     color: #333;
+}
+
+.quiz-creator {
+    font-size: 12px;
+    color: #666;
 }
 
 .quiz-info {
@@ -1361,6 +1426,10 @@ td.clickable:hover {
     .card-grid {
         grid-template-columns: 1fr;
     }
+    
+    .reward-grid {
+        grid-template-columns: 1fr;
+    }
 
     .bestseller-filters {
         justify-content: center;
@@ -1385,7 +1454,16 @@ td.clickable:hover {
         gap: 16px;
     }
     
-    .quiz-grid {
+    .quiz-list {
         grid-template-columns: 1fr;
+    }
+    
+    .reward-content {
+        flex-direction: column;
+    }
+    
+    .reward-image {
+        width: 100%;
+        height: 120px;
     }
 }

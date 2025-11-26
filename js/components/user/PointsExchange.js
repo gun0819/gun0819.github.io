@@ -1,4 +1,4 @@
-// 포인트 교환소 컴포넌트 (포인트 조정)
+// 포인트 교환소 컴포넌트 (이미지 추가)
 const PointsExchange = {
     template: `
         <div>
@@ -39,16 +39,24 @@ const PointsExchange = {
                     </div>
                     
                     <h3>보상 신청</h3>
-                    <div class="card-grid">
-                        <div v-for="reward in rewards" :key="reward.id" class="card">
-                            <h3>{{ reward.name }}</h3>
-                            <p>{{ reward.description }}</p>
-                            <p style="font-size: 24px; color: #667eea; font-weight: bold;">{{ reward.points.toLocaleString() }} P</p>
-                            <button @click="requestReward(reward)" 
-                                    :disabled="currentPoints < reward.points" 
-                                    class="btn btn-sm">
-                                {{ currentPoints >= reward.points ? '신청하기' : '포인트 부족' }}
-                            </button>
+                    <div class="reward-grid">
+                        <div v-for="reward in rewards" :key="reward.id" class="reward-card">
+                            <div class="reward-content">
+                                <div class="reward-info">
+                                    <h3>{{ reward.name }}</h3>
+                                    <p>{{ reward.description }}</p>
+                                    <p class="reward-price">{{ reward.points.toLocaleString() }} P</p>
+                                    <button @click="requestReward(reward)" 
+                                            :disabled="currentPoints < reward.points" 
+                                            class="btn btn-sm">
+                                        {{ currentPoints >= reward.points ? '신청하기' : '포인트 부족' }}
+                                    </button>
+                                </div>
+                                <div class="reward-image">
+                                    <div v-if="reward.emoji" class="reward-emoji">{{ reward.emoji }}</div>
+                                    <img v-else-if="reward.image" :src="reward.image" :alt="reward.name">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -59,11 +67,46 @@ const PointsExchange = {
         return {
             currentPoints: store.getUserPoints(store.currentUser.email),
             rewards: [
-                { id: 1, name: '스타벅스 아메리카노', description: '따뜻한 커피 한 잔', points: 4500 },
-                { id: 2, name: '교보문고 도서상품권 5,000원', description: '5,000원 상품권', points: 5000 },
-                { id: 3, name: '교보문고 도서상품권 10,000원', description: '10,000원 상품권', points: 10000 },
-                { id: 4, name: '교보문고 도서상품권 20,000원', description: '20,000원 상품권', points: 20000 },
-                { id: 5, name: '교보문고 도서상품권 30,000원', description: '30,000원 상품권', points: 30000 }
+                { 
+                    id: 1, 
+                    name: '스타벅스 아메리카노', 
+                    description: '따뜻한 커피 한 잔', 
+                    points: 4500,
+                    emoji: '☕',
+                    image: 'https://image.istarbucks.co.kr/upload/store/skuimg/2021/04/[9200000002487]_20210426091745467.jpg'
+                },
+                { 
+                    id: 2, 
+                    name: '교보문고 도서상품권 5,000원', 
+                    description: '5,000원 상품권', 
+                    points: 5000,
+                    emoji: '📚',
+                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                },
+                { 
+                    id: 3, 
+                    name: '교보문고 도서상품권 10,000원', 
+                    description: '10,000원 상품권', 
+                    points: 10000,
+                    emoji: '📚',
+                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                },
+                { 
+                    id: 4, 
+                    name: '교보문고 도서상품권 20,000원', 
+                    description: '20,000원 상품권', 
+                    points: 20000,
+                    emoji: '📚',
+                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                },
+                { 
+                    id: 5, 
+                    name: '교보문고 도서상품권 30,000원', 
+                    description: '30,000원 상품권', 
+                    points: 30000,
+                    emoji: '📚',
+                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                }
             ]
         };
     },

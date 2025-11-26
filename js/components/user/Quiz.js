@@ -216,6 +216,13 @@ const Quiz = {
             return;
         }
         
+        // 본인이 만든 퀴즈인지 확인
+        if (store.currentUser && this.quiz.creatorId === store.currentUser.id) {
+            alert('본인이 만든 퀴즈는 풀 수 없습니다.');
+            this.$router.push('/dashboard');
+            return;
+        }
+        
         // 이미 완료한 퀴즈인지 확인 (퀴즈 ID 기반)
         if (store.currentUser && store.hasCompletedQuiz(store.currentUser.id, this.quizId)) {
             this.alreadyCompleted = true;

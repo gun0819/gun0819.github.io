@@ -25,12 +25,18 @@ exports.handler = async (event, context) => {
   const page = event.queryStringParameters.page || 1;
   const ttbkey = event.queryStringParameters.ttbkey || 'ttbgun081901601001';
   const sortBy = event.queryStringParameters.sortBy || 'Accuracy';
+  const categoryId = event.queryStringParameters.categoryId || '';
 
   let apiUrl;
 
   // 베스트셀러 조회
   if (queryType) {
     apiUrl = `http://www.aladin.co.kr/ttb/api/ItemList.aspx?ttbkey=${ttbkey}&QueryType=${queryType}&MaxResults=50&start=1&SearchTarget=Book&output=js&Version=20131101&Cover=Big`;
+    
+    // CategoryId가 있으면 추가
+    if (categoryId) {
+      apiUrl += `&CategoryId=${categoryId}`;
+    }
   } 
   // 검색 조회
   else if (query) {
@@ -92,5 +98,3 @@ exports.handler = async (event, context) => {
     });
   });
 };
-
-

@@ -45,11 +45,18 @@ const bookAPI = {
         }
     },
 
-    async getBestseller(queryType = 'Bestseller') {
-        console.log('📚 베스트셀러 가져오기:', queryType);
+    async getBestseller(queryType = 'Bestseller', categoryId = null) {
+        console.log('📚 베스트셀러 가져오기:', queryType, 'CategoryId:', categoryId);
         
         try {
-            const response = await fetch(`/.netlify/functions/aladin-search?queryType=${queryType}&ttbkey=${CONFIG.ALADIN_TTB_KEY}`);
+            let url = `/.netlify/functions/aladin-search?queryType=${queryType}&ttbkey=${CONFIG.ALADIN_TTB_KEY}`;
+            
+            // 카테고리 ID가 있으면 추가
+            if (categoryId) {
+                url += `&categoryId=${categoryId}`;
+            }
+            
+            const response = await fetch(url);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

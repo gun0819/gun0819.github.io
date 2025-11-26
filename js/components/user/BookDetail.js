@@ -227,7 +227,13 @@ const BookDetail = {
         },
         availableQuizzes() {
             if (!this.book) return [];
-            return store.getQuizzesByBook(this.bookId, this.book.title, this.book.author);
+            const allQuizzes = store.getQuizzesByBook(this.bookId, this.book.title, this.book.author);
+            
+            // 본인이 만든 퀴즈는 제외
+            if (this.isLoggedIn) {
+                return allQuizzes.filter(q => q.creatorId !== this.currentUserId);
+            }
+            return allQuizzes;
         },
         averageRating() {
             if (this.reviews.length === 0) return 0;
