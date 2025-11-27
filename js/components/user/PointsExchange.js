@@ -72,37 +72,30 @@ const PointsExchange = {
                 {
                     id: 1,
                     name: '스타벅스 아메리카노',
-                    description: '따뜻한 커피 한 잔',
-                    points: 4500,
-                    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=300&fit=crop'
+                    description: '커피 한 잔',
+                    points: 4700,
+                    image: 'images/rewards/starbux-americano.jpg'
                 },
                 {
                     id: 2,
-                    name: '교보문고 도서상품권 5,000원',
-                    description: '5,000원 상품권',
-                    points: 5000,
-                    image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=300&fit=crop'
-                },
-                {
-                    id: 3,
                     name: '교보문고 도서상품권 10,000원',
                     description: '10,000원 상품권',
                     points: 10000,
-                    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=300&fit=crop'
+                    image: 'images/rewards/kyobo-10000.jpg'
                 },
                 {
-                    id: 4,
-                    name: '교보문고 도서상품권 20,000원',
-                    description: '20,000원 상품권',
-                    points: 20000,
-                    image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&h=300&fit=crop'
-                },
-                {
-                    id: 5,
+                    id: 3,
                     name: '교보문고 도서상품권 30,000원',
                     description: '30,000원 상품권',
                     points: 30000,
-                    image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=300&fit=crop'
+                    image: 'images/rewards/kyobo-30000.jpg'
+                },
+                {
+                    id: 4,
+                    name: '교보문고 도서상품권 50,000원',
+                    description: '50,000원 상품권',
+                    points: 50000,
+                    image: 'images/rewards/kyobo-50000.jpg'
                 }
             ]
         };
