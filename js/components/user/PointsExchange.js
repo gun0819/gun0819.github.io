@@ -1,4 +1,4 @@
-// 포인트 교환소 컴포넌트 (이미지 추가)
+// 포인트 교환소 컴포넌트 (실제 이미지 표시)
 const PointsExchange = {
     template: `
         <div>
@@ -53,8 +53,10 @@ const PointsExchange = {
                                     </button>
                                 </div>
                                 <div class="reward-image">
-                                    <div v-if="reward.emoji" class="reward-emoji">{{ reward.emoji }}</div>
-                                    <img v-else-if="reward.image" :src="reward.image" :alt="reward.name">
+                                    <img v-if="reward.image" 
+                                         :src="reward.image" 
+                                         :alt="reward.name"
+                                         @error="handleImageError($event, reward)">
                                 </div>
                             </div>
                         </div>
@@ -67,45 +69,40 @@ const PointsExchange = {
         return {
             currentPoints: store.getUserPoints(store.currentUser.email),
             rewards: [
-                { 
-                    id: 1, 
-                    name: '스타벅스 아메리카노', 
-                    description: '따뜻한 커피 한 잔', 
+                {
+                    id: 1,
+                    name: '스타벅스 아메리카노',
+                    description: '따뜻한 커피 한 잔',
                     points: 4500,
-                    emoji: '☕',
-                    image: 'https://image.istarbucks.co.kr/upload/store/skuimg/2021/04/[9200000002487]_20210426091745467.jpg'
+                    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=300&fit=crop'
                 },
-                { 
-                    id: 2, 
-                    name: '교보문고 도서상품권 5,000원', 
-                    description: '5,000원 상품권', 
+                {
+                    id: 2,
+                    name: '교보문고 도서상품권 5,000원',
+                    description: '5,000원 상품권',
                     points: 5000,
-                    emoji: '📚',
-                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                    image: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=300&fit=crop'
                 },
-                { 
-                    id: 3, 
-                    name: '교보문고 도서상품권 10,000원', 
-                    description: '10,000원 상품권', 
+                {
+                    id: 3,
+                    name: '교보문고 도서상품권 10,000원',
+                    description: '10,000원 상품권',
                     points: 10000,
-                    emoji: '📚',
-                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                    image: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=300&fit=crop'
                 },
-                { 
-                    id: 4, 
-                    name: '교보문고 도서상품권 20,000원', 
-                    description: '20,000원 상품권', 
+                {
+                    id: 4,
+                    name: '교보문고 도서상품권 20,000원',
+                    description: '20,000원 상품권',
                     points: 20000,
-                    emoji: '📚',
-                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                    image: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=300&h=300&fit=crop'
                 },
-                { 
-                    id: 5, 
-                    name: '교보문고 도서상품권 30,000원', 
-                    description: '30,000원 상품권', 
+                {
+                    id: 5,
+                    name: '교보문고 도서상품권 30,000원',
+                    description: '30,000원 상품권',
                     points: 30000,
-                    emoji: '📚',
-                    image: 'https://contents.kyobobook.co.kr/resources/fo/images/common/ink/img_giftcard_01.png'
+                    image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=300&fit=crop'
                 }
             ]
         };
@@ -128,11 +125,18 @@ const PointsExchange = {
         }
     },
     methods: {
+        handleImageError(event, reward) {
+            // 이미지 로딩 실패 시 대체 이미지 표시
+            console.warn('이미지 로딩 실패:', reward.name);
+            event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"%3E%3Crect fill="%23f0f0f0" width="120" height="120"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="monospace" font-size="40" fill="%23999"%3E' +
+                (reward.name.includes('스타벅스') ? '☕' : '📚') +
+                '%3C/text%3E%3C/svg%3E';
+        },
         requestReward(reward) {
             if (confirm(`${reward.name}을(를) ${reward.points.toLocaleString()} 포인트로 신청하시겠습니까?`)) {
                 store.addUserPoints(store.currentUser.email, -reward.points, `보상 신청: ${reward.name}`);
                 this.currentPoints = store.getUserPoints(store.currentUser.email);
-                
+
                 const request = {
                     id: Date.now(),
                     userId: store.currentUser.id,
@@ -144,7 +148,7 @@ const PointsExchange = {
                     status: 'pending',
                     date: new Date().toLocaleDateString()
                 };
-                
+
                 store.addRewardRequest(request);
                 alert('보상이 신청되었습니다! 관리자 확인 후 지급됩니다.');
                 this.$router.push('/points-requests');
@@ -152,7 +156,6 @@ const PointsExchange = {
         },
         logout() {
             store.clearCurrentUser();
-            // 즉시 UI 업데이트를 위해 페이지 새로고침
             window.location.href = '/#/dashboard';
         }
     }
