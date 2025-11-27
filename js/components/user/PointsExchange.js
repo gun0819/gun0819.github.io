@@ -71,31 +71,38 @@ const PointsExchange = {
             rewards: [
                 {
                     id: 1,
-                    name: '스타벅스 아메리카노',
-                    description: '커피 한 잔',
-                    points: 4700,
-                    image: 'images/rewards/starbux-americano.jpg'
-                },
-                {
-                    id: 2,
                     name: '교보문고 도서상품권 10,000원',
                     description: '10,000원 상품권',
                     points: 10000,
                     image: 'images/rewards/kyobo-10000.jpg'
                 },
                 {
-                    id: 3,
+                    id: 2,
                     name: '교보문고 도서상품권 30,000원',
                     description: '30,000원 상품권',
                     points: 30000,
                     image: 'images/rewards/kyobo-30000.jpg'
                 },
                 {
-                    id: 4,
+                    id: 3,
                     name: '교보문고 도서상품권 50,000원',
                     description: '50,000원 상품권',
                     points: 50000,
                     image: 'images/rewards/kyobo-50000.jpg'
+                },
+                {
+                    id: 4,
+                    name: '스타벅스 상품권 30,000원',
+                    description: '30,000원 상품권',
+                    points: 30000,
+                    image: 'images/rewards/sbux-30000.jpg'
+                },
+                {
+                    id: 5,
+                    name: '스타벅스 상품권 50,000원',
+                    description: '50,000원 상품권',
+                    points: 50000,
+                    image: 'images/rewards/sbux-50000.jpg'
                 }
             ]
         };
