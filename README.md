@@ -285,15 +285,6 @@ location.reload();
 - [ ] PWA (Progressive Web App) 지원
 - [ ] 다크 모드
 
-## 📄 라이선스
-
-MIT License
-
-## 👥 기여
-
-이 프로젝트는 교육 목적으로 제작되었습니다. 
-기여를 환영합니다!
-
 ---
 
 **Made with ❤️ for book lovers**
